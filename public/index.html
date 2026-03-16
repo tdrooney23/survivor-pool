@@ -362,21 +362,6 @@ const randomPool = [
   'Purdue','North Carolina'
 ];
 
-const allParticipants = [
-  'Aaron Starkman','Allie Davison','Allison Thurschwell','Anthony Burgess','Anthony Kleva',
-  'Beasley','Bon','Bracher Brown','Brad Bowden','Brady White','Cal Horton',
-  'Marler from the Internet','Chris Mitchell','Clack','Colin Wilson','Cruz Ox',
-  'Dane Swenson','Dylan D.','Emily McCormick','Erica Juliano','Evan Magley',
-  'Ian McMullen','Isaac H.','Joe Tierney','Johnny Brothers','Josh Goldstein',
-  'Kaitlyn Paolo','Kathy White','Killian Woodward','Kristin Mclean','Kyle Ingram',
-  'Lauren Rooney','Leah Pettegrew','Lexi Box','Lindsey S.','Lisa Jo','Luke Cechman',
-  'Maggie Kleva','Matthew Dickson','Mcaff','Merbs','Nick Kleva','Nick Roark',
-  'Pat Tierney','Patrick Koroly','Peter','Phil Chinnery','Ricky','Riley',
-  'Ron Weidner','Ryan C.','Sara C.','Sellers','Sierra','Steve Conte','Sydney',
-  'Tim Rooney','TJ','Tom Porter','Tom Tierney','Tony Hein','Trent Kilpatrick',
-  'Trey Mclean','Troy Rooney','Vin Doyle'
-];
-
 function seededRand(seed) {
   let s = seed;
   return () => { s = (s*9301+49297)%233280; return s/233280; };
