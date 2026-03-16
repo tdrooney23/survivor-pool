@@ -585,7 +585,7 @@ async function fetchScores(manual = false) {
   if (manual) setLiveStatus('', 'Refreshing...');
 
   try {
-    const url = 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?groups=100&limit=100';
+    const url = '/api/scores';
     const res = await fetch(url);
     if (!res.ok) throw new Error('ESPN API error');
     const data = await res.json();
