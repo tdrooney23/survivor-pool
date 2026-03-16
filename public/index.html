@@ -429,7 +429,7 @@ function render() {
           </div>
         </div>
         <div class="card-footer">
-          <div class="vs-info"><em>VS</em>${oppLabel}</div>
+          <div class="vs-info"><em>VS</em>${oppLabel}${scoreHTML(g.team1)}</div>
           <div class="footer-right">
             <span class="game-time">${g.time}</span>
             <span class="network-badge ${netClass(g.net)}">${g.net}</span>
@@ -453,11 +453,12 @@ function render() {
     <div>Real Picks: <span>${rawPicks.length}</span></div>`;
 }
 
-// ── RESULTS (update this when results come in) ────────────────
-// 'won' = advanced, 'lost' = eliminated, null = pending
-const results = {
-  // Example: 'Duke': 'won', 'TCU': 'lost'
-};
+// ── RESULTS ───────────────────────────────────────────────────
+const results = {};
+
+// ── GAME SCORES ───────────────────────────────────────────────
+// keyed by our team name: { score1, score2, state:'pre'|'in'|'post', clock, period }
+const gameScores = {};
 
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(id, btn) {
@@ -518,7 +519,37 @@ function pickCircleHTML(team, result) {
   </div>`;
 }
 
-// ── LIVE SCORES (ESPN API) ────────────────────────────────────
+// ── SCORE DISPLAY ─────────────────────────────────────────────
+function scoreHTML(team) {
+  const s = gameScores[team];
+  if (!s || s.state === 'pre') return '';
+
+  const sep = '<span style="color:#475569;font-size:11px;margin:0 2px;">·</span>';
+
+  if (s.state === 'in') {
+    const winning = s.score1 > s.score2;
+    const losing  = s.score1 < s.score2;
+    const s1color = winning ? '#22c55e' : losing ? '#ef4444' : '#8aa0bc';
+    return ` ${sep}
+      <span style="color:${s1color};font-size:13px;font-weight:800;">${s.score1}</span>
+      <span style="color:#475569;font-size:11px;">–</span>
+      <span style="color:#8aa0bc;font-size:13px;">${s.score2}</span>
+      <span style="color:#475569;font-size:10px;margin-left:3px;">${s.clock} ${s.period}</span>`;
+  }
+
+  if (s.state === 'post') {
+    const won = results[team] === 'won';
+    const letter = won
+      ? '<span style="color:#22c55e;font-size:12px;font-weight:800;margin-right:3px;">W</span>'
+      : '<span style="color:#ef4444;font-size:12px;font-weight:800;margin-right:3px;">L</span>';
+    return ` ${sep} ${letter}
+      <span style="color:#8aa0bc;font-size:13px;font-weight:700;">${s.score1} – ${s.score2}</span>
+      <span style="color:#475569;font-size:10px;margin-left:3px;">FINAL</span>`;
+  }
+  return '';
+}
+
+
 // Maps ESPN team names/abbrevs → our pick names
 const espnTeamMap = {
   'Duke': 'Duke', 'Michigan': 'Michigan', 'Florida': 'Florida',
@@ -565,26 +596,50 @@ async function fetchScores(manual = false) {
     events.forEach(event => {
       const comp = event.competitions?.[0];
       if (!comp) return;
-      const status = comp.status?.type;
-      const isFinished = status?.completed === true;
-      if (!isFinished) return;
+      const statusType = comp.status?.type;
+      const state = statusType?.state || 'pre'; // 'pre', 'in', 'post'
+      const isFinished = statusType?.completed === true;
+      const clock = comp.status?.displayClock || '';
+      const period = comp.status?.period
+        ? (comp.status.period <= 2 ? `${comp.status.period}H` : `OT`)
+        : '';
 
-      comp.competitors?.forEach(team => {
-        const name = team.team?.displayName || team.team?.shortDisplayName || '';
-        const ourName = espnTeamMap[name];
-        if (!ourName) return;
-        const won = team.winner === true;
-        if (results[ourName] !== (won ? 'won' : 'lost')) {
-          results[ourName] = won ? 'won' : 'lost';
-          updated = true;
+      // Find our team in this matchup
+      const competitors = comp.competitors || [];
+      let ourTeam = null, ourScore = 0, oppScore = 0, ourWon = false;
+
+      competitors.forEach(t => {
+        const name = t.team?.displayName || t.team?.shortDisplayName || '';
+        const mapped = espnTeamMap[name];
+        if (mapped) {
+          ourTeam = mapped;
+          ourScore = parseInt(t.score) || 0;
+          ourWon = t.winner === true;
+        } else {
+          oppScore = parseInt(t.score) || 0;
         }
       });
+
+      if (!ourTeam) return;
+
+      // Update gameScores
+      const prev = JSON.stringify(gameScores[ourTeam]);
+      gameScores[ourTeam] = { score1: ourScore, score2: oppScore, state, clock, period };
+      if (JSON.stringify(gameScores[ourTeam]) !== prev) updated = true;
+
+      // Update results on completion
+      if (isFinished) {
+        const newResult = ourWon ? 'won' : 'lost';
+        if (results[ourTeam] !== newResult) {
+          results[ourTeam] = newResult;
+          updated = true;
+        }
+      }
     });
 
-    // Count live games
     const liveGames = events.filter(e => {
       const s = e.competitions?.[0]?.status?.type;
-      return s?.state === 'in' || s?.name === 'STATUS_IN_PROGRESS';
+      return s?.state === 'in';
     }).length;
 
     lastUpdated = new Date();
@@ -600,7 +655,7 @@ async function fetchScores(manual = false) {
     setLiveStatus('error', 'Could not reach ESPN — will retry');
     console.warn('ESPN fetch error:', err);
   } finally {
-    if (btn) { btn.disabled = false; }
+    if (btn) btn.disabled = false;
   }
 }
 
