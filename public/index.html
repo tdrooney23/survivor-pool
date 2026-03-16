@@ -382,23 +382,68 @@ function seededRand(seed) {
   return () => { s = (s*9301+49297)%233280; return s/233280; };
 }
 
-const picksMap = {};
-rawPicks.forEach(([n,t1,t2]) => picksMap[n]=[t1,t2]);
-const rand = seededRand(42);
-allParticipants.forEach(name => {
-  if (!picksMap[name]) {
-    const sh = [...randomPool].sort(()=>rand()-0.5);
-    picksMap[name] = [sh[0], sh[1]];
-  }
-});
+// ── SHEET CONFIG ─────────────────────────────────────────────
+// Paste your Apps Script Web App URL here after deploying
+const SHEET_URL = '';
 
-const teamPickers = {};
-allParticipants.forEach(name => {
-  picksMap[name].forEach(t => {
-    if (!teamPickers[t]) teamPickers[t]=[];
-    teamPickers[t].push(name);
+let picksMap = {};
+let allParticipants = [];
+let teamPickers = {};
+
+function buildFromData(participants, picks, paid) {
+  // Rebuild allParticipants
+  allParticipants = participants;
+
+  // Build picksMap from sheet data, fall back to random for blanks
+  const rawMap = {};
+  picks.forEach(([n, t1, t2]) => { if (n) rawMap[n] = [t1||'', t2||'']; });
+
+  picksMap = {};
+  const rand = seededRand(42);
+  allParticipants.forEach(name => {
+    if (rawMap[name] && rawMap[name][0]) {
+      picksMap[name] = rawMap[name];
+    } else {
+      const sh = [...randomPool].sort(() => rand() - 0.5);
+      picksMap[name] = [sh[0], sh[1]];
+    }
   });
-});
+
+  // Rebuild paidList from sheet
+  paidList.clear();
+  paid.forEach(name => { if (name) paidList.add(name); });
+
+  // Rebuild teamPickers
+  teamPickers = {};
+  allParticipants.forEach(name => {
+    (picksMap[name] || []).forEach(t => {
+      if (!teamPickers[t]) teamPickers[t] = [];
+      teamPickers[t].push(name);
+    });
+  });
+}
+
+async function fetchSheetData() {
+  if (!SHEET_URL) {
+    // No sheet URL yet — use hardcoded data
+    buildFromData(allParticipants, rawPicks, []);
+    return;
+  }
+  try {
+    const res = await fetch(SHEET_URL);
+    if (!res.ok) throw new Error('Sheet fetch failed');
+    const data = await res.json();
+    buildFromData(data.participants, data.picks, data.paid);
+    render();
+    renderParticipants();
+  } catch(err) {
+    console.warn('Sheet fetch error, using hardcoded data:', err);
+    buildFromData(allParticipants, rawPicks, []);
+  }
+}
+
+// Initialize with hardcoded data immediately, then try sheet
+buildFromData(allParticipants, rawPicks, []);
 
 // ── RENDER ───────────────────────────────────────────────────
 function netClass(net) {
@@ -456,10 +501,29 @@ function render() {
     html += '</div>';
   }
 
+  // Not picked yet banner
+  const notPicked = allParticipants.filter(n => {
+    const [t1, t2] = picksMap[n] || [];
+    return !t1 || !t2;
+  });
+  let bannerHtml = '';
+  if (notPicked.length > 0) {
+    const chips = notPicked.map(n => `<span class="picker-chip" style="border-color:rgba(239,180,0,0.3);background:rgba(239,180,0,0.08);color:#f0b400;">${n}</span>`).join('');
+    bannerHtml = `
+    <div style="max-width:1400px;margin:0 auto;padding:0 20px 16px;">
+      <div style="background:#0f1f3d;border:1px solid rgba(239,180,0,0.25);border-radius:8px;padding:12px 16px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f0b400;margin-bottom:8px;">
+          Picks Not Yet Submitted (${notPicked.length})
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
+      </div>
+    </div>`;
+  }
+
   renderGroup(thu, 'Thursday, March 19');
   renderGroup(fri, 'Friday, March 20');
 
-  document.getElementById('app').innerHTML = html;
+  document.getElementById('app').innerHTML = bannerHtml + html;
 
   const teamsShown = thu.length + fri.length;
   document.getElementById('stats').innerHTML = `
@@ -534,17 +598,56 @@ function isEliminated(name) {
   return results[t1] === 'lost' || results[t2] === 'lost';
 }
 
-function pickCircleHTML(team, result) {
-  const cls = result === 'won' ? 'won' : result === 'lost' ? 'lost' : '';
-  const logoSrc = LOGOS[team];
-  const inner = logoSrc
-    ? `<img src="${logoSrc}" alt="${team}">`
-    : `<div class="circle-placeholder">${team}</div>`;
-  return `
-  <div class="pick-slot">
-    <div class="pick-circle ${cls}">${inner}</div>
-    <div class="pick-label">${team}</div>
+// circle states: 'won', 'lost', 'nopick', 'locked', 'elim'
+function makeCircle(team, state, label, showLogo) {
+  let border, bg, inner;
+
+  if (state === 'won') {
+    border = '2px solid #22c55e';
+    bg = 'rgba(34,197,94,0.08)';
+    const logoSrc = LOGOS[team];
+    inner = logoSrc
+      ? `<img src="${logoSrc}" alt="${team}" style="width:32px;height:32px;object-fit:contain;">`
+      : `<div style="font-size:7px;font-weight:800;color:#fff;text-align:center;">${team.substring(0,4).toUpperCase()}</div>`;
+  } else if (state === 'lost') {
+    border = '2px solid #ef4444';
+    bg = 'rgba(239,68,68,0.10)';
+    const logoSrc = LOGOS[team];
+    const logo = logoSrc
+      ? `<img src="${logoSrc}" alt="${team}" style="width:32px;height:32px;object-fit:contain;opacity:0.3;">`
+      : `<div style="font-size:7px;font-weight:800;color:rgba(255,255,255,0.3);text-align:center;">${team.substring(0,4).toUpperCase()}</div>`;
+    inner = logo + `<div style="position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:rgba(239,68,68,0.9);">X</div>`;
+  } else if (state === 'elim') {
+    // Eliminated future round - empty red X no logo
+    border = '2px solid #ef4444';
+    bg = 'rgba(239,68,68,0.08)';
+    inner = `<div style="font-size:22px;font-weight:900;color:rgba(239,68,68,0.7);">X</div>`;
+  } else if (state === 'nopick') {
+    border = '2px dashed #2a3a5a';
+    bg = 'transparent';
+    inner = `<div style="font-size:8px;font-weight:700;color:#2a4a6a;text-align:center;line-height:1.2;">NO<br>PICK</div>`;
+  } else {
+    // locked - not open yet
+    border = '1px solid #151f35';
+    bg = 'rgba(255,255,255,0.015)';
+    inner = `<div style="font-size:11px;font-weight:700;color:#1e2d45;">—</div>`;
+  }
+
+  const labelColor = state === 'won' ? '#22c55e'
+    : (state === 'lost' || state === 'elim') ? '#ef4444'
+    : state === 'nopick' ? '#2a4a6a'
+    : '#1e2d45';
+
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">
+    <div style="position:relative;width:44px;height:44px;border-radius:50%;border:${border};background:${bg};display:flex;align-items:center;justify-content:center;overflow:hidden;">${inner}</div>
+    <div style="font-size:8px;font-weight:700;color:${labelColor};letter-spacing:0.5px;text-transform:uppercase;">${label}</div>
   </div>`;
+}
+
+function pickCircleHTML(team, result) {
+  // Legacy wrapper - kept for compatibility
+  const state = result === 'won' ? 'won' : result === 'lost' ? 'lost' : 'nopick';
+  return makeCircle(team, state, 'R64', true);
 }
 
 // ── SCORE DISPLAY ─────────────────────────────────────────────
