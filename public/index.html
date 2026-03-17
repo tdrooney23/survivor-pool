@@ -218,7 +218,7 @@
   /* ── PARTICIPANTS GRID ── */
   .participants-grid {
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
     gap:12px; padding:12px 20px 40px;
     max-width:1400px; margin:0 auto;
   }
@@ -575,10 +575,10 @@ function renderParticipants() {
     return `
     <div class="participant-card${elim ? ' eliminated' : ''}" style="animation-delay:${i*20}ms">
       <div class="participant-name">${name} — ${elim ? 'ELIMINATED' : 'ALIVE'}</div>
-      <div class="pick-circles" style="display:flex;align-items:flex-start;gap:6px;flex-wrap:nowrap;">
+      <div class="pick-circles" style="display:flex;align-items:flex-start;gap:4px;flex-wrap:nowrap;justify-content:space-between;">
         ${makeCircle(t1, r64State(t1, r1), 'R64', true)}
         ${makeCircle(t2, r64State(t2, r2), 'R64', true)}
-        <div style="width:1px;height:44px;background:#1e2d45;margin:0 4px;flex-shrink:0;"></div>
+        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle('', futureState, 'R32', false)}
         ${makeCircle('', futureState, 'S16', false)}
         ${makeCircle('', futureState, 'E8', false)}
@@ -611,21 +611,21 @@ function makeCircle(team, state, label, showLogo) {
     bg = 'rgba(59,130,246,0.08)';
     const logoSrc = LOGOS[team];
     inner = logoSrc
-      ? `<img src="${logoSrc}" alt="${team}" style="width:32px;height:32px;object-fit:contain;">`
+      ? `<img src="${logoSrc}" alt="${team}" style="width:28px;height:28px;object-fit:contain;">`
       : `<div style="font-size:7px;font-weight:800;color:#fff;text-align:center;">${team.substring(0,4).toUpperCase()}</div>`;
   } else if (state === 'won') {
     border = '2px solid #22c55e';
     bg = 'rgba(34,197,94,0.08)';
     const logoSrc = LOGOS[team];
     inner = logoSrc
-      ? `<img src="${logoSrc}" alt="${team}" style="width:32px;height:32px;object-fit:contain;">`
+      ? `<img src="${logoSrc}" alt="${team}" style="width:28px;height:28px;object-fit:contain;">`
       : `<div style="font-size:7px;font-weight:800;color:#fff;text-align:center;">${team.substring(0,4).toUpperCase()}</div>`;
   } else if (state === 'lost') {
     border = '2px solid #ef4444';
     bg = 'rgba(239,68,68,0.10)';
     const logoSrc = LOGOS[team];
     const logo = logoSrc
-      ? `<img src="${logoSrc}" alt="${team}" style="width:32px;height:32px;object-fit:contain;opacity:0.3;">`
+      ? `<img src="${logoSrc}" alt="${team}" style="width:28px;height:28px;object-fit:contain;opacity:0.3;">`
       : `<div style="font-size:7px;font-weight:800;color:rgba(255,255,255,0.3);text-align:center;">${team.substring(0,4).toUpperCase()}</div>`;
     inner = logo + `<div style="position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:rgba(239,68,68,0.9);">X</div>`;
   } else if (state === 'elim') {
@@ -651,7 +651,7 @@ function makeCircle(team, state, label, showLogo) {
     : '#1e2d45';
 
   return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">
-    <div style="position:relative;width:44px;height:44px;border-radius:50%;border:${border};background:${bg};display:flex;align-items:center;justify-content:center;overflow:hidden;">${inner}</div>
+    <div style="position:relative;width:38px;height:38px;border-radius:50%;border:${border};background:${bg};display:flex;align-items:center;justify-content:center;overflow:hidden;">${inner}</div>
     <div style="font-size:8px;font-weight:700;color:${labelColor};letter-spacing:0.5px;text-transform:uppercase;">${label}</div>
   </div>`;
 }
