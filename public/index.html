@@ -381,23 +381,27 @@ const paidList = new Set([
 ]);
 const VENMO_HANDLE = '@Troy-Rooney-1';
 
+// Normalize team names from sheet to match schedule
+const teamNameMap = {};
+schedule.forEach(g => {
+  teamNameMap[g.team1.toLowerCase()] = g.team1;
+  if (typeof g.team2 === 'string' && g.team2 !== 'TBD') teamNameMap[g.team2.toLowerCase()] = g.team2;
+});
+function normalizeTeam(t) {
+  if (!t) return '';
+  return teamNameMap[t.toLowerCase().replace(/[.']/g, '').trim()]
+      || teamNameMap[t.toLowerCase().trim()]
+      || t;
+}
+
 function buildFromData(participants, picks, paid) {
   // Rebuild allParticipants
   allParticipants = participants;
 
-  // Build picksMap from sheet data, fall back to random for blanks
-  const rawMap = {};
-  picks.forEach(([n, t1, t2]) => { if (n) rawMap[n] = [t1||'', t2||'']; });
-
+  // Build picksMap from sheet data, normalizing team names
   picksMap = {};
-  const rand = seededRand(42);
-  allParticipants.forEach(name => {
-    if (rawMap[name] && rawMap[name][0]) {
-      picksMap[name] = rawMap[name];
-    } else {
-      const sh = [...randomPool].sort(() => rand() - 0.5);
-      picksMap[name] = [sh[0], sh[1]];
-    }
+  picks.forEach(([n, t1, t2]) => {
+    if (n) picksMap[n] = [normalizeTeam(t1), normalizeTeam(t2)];
   });
 
   // Rebuild paidList from sheet
@@ -432,9 +436,6 @@ async function fetchSheetData() {
     buildFromData(allParticipants, rawPicks, []);
   }
 }
-
-// Initialize with hardcoded data immediately, then try sheet
-buildFromData(allParticipants, rawPicks, []);
 
 // ── RENDER ───────────────────────────────────────────────────
 function netClass(net) {
