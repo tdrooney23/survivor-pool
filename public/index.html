@@ -300,6 +300,9 @@
   <div id="app"></div>
 </div>
 <div id="participants" class="tab-panel">
+  <div style="max-width:1400px;margin:0 auto;padding:12px 20px 0;">
+    <input id="participant-search" type="text" placeholder="Search by name..." oninput="renderParticipants()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--card-border);background:var(--dark-card);color:#fff;font-size:14px;outline:none;box-sizing:border-box;">
+  </div>
   <div id="participants-grid" class="participants-grid"></div>
 </div>
 <footer>SURVIVOR POOL 2025 &middot; MARCH MADNESS</footer>
@@ -545,8 +548,12 @@ function switchTab(id, btn) {
 function renderParticipants() {
   const grid = document.getElementById('participants-grid');
 
+  // Filter by search
+  const query = (document.getElementById('participant-search')?.value || '').toLowerCase();
+  const filtered = allParticipants.filter(n => !query || n.toLowerCase().includes(query));
+
   // Sort: alive first, then alphabetical
-  const sorted = [...allParticipants].sort((a, b) => {
+  const sorted = filtered.sort((a, b) => {
     const aElim = isEliminated(a);
     const bElim = isEliminated(b);
     if (aElim !== bElim) return aElim ? 1 : -1;
@@ -574,7 +581,7 @@ function renderParticipants() {
     const onclickAttr = paid ? '' : `onclick="openVenmo('${name.replace(/'/g, "\\'")}')"`;
     return `
     <div class="participant-card${elim ? ' eliminated' : ''}" style="animation-delay:${i*20}ms">
-      <div class="participant-name">${name} — ${elim ? 'ELIMINATED' : 'ALIVE'}</div>
+      <div class="participant-name">${name}</div>
       <div class="pick-circles" style="display:flex;align-items:flex-start;gap:4px;flex-wrap:nowrap;justify-content:space-between;">
         ${makeCircle(t1, r64State(t1, r1), 'R64', true)}
         ${makeCircle(t2, r64State(t2, r2), 'R64', true)}
