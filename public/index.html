@@ -834,8 +834,9 @@ async function fetchScores(manual = false) {
       let ourTeam = null, ourScore = 0, oppScore = 0, ourWon = false;
 
       competitors.forEach(t => {
-        const name = t.team?.displayName || t.team?.shortDisplayName || '';
-        const mapped = espnTeamMap[name];
+        const displayName = t.team?.displayName || '';
+        const shortName = t.team?.shortDisplayName || '';
+        const mapped = espnTeamMap[shortName] || espnTeamMap[displayName];
         if (mapped) {
           ourTeam = mapped;
           ourScore = parseInt(t.score) || 0;
