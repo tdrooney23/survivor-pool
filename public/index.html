@@ -650,11 +650,27 @@ function render() {
 const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABXUlEQVRoge3Z0a3DIAwFUDMBI2TUrJoRMgF+ie0LJE+t+omla1WRW86fW2OoyG+xK+K09/XKmmWlr+hBtgY7o2oXC7z5UrlWw5NlY756g2rJUcB6QpaVufRa25MsPbP+rAG+f0PI1mZzi46ejNVPnZxsaaYI/KIfdfcgS8UeUTEkS3kvkeVhe6+7xfVJ1Hpr40WWiok155HUvu1KALKcTOchWds4yXp+kGVi/nO+K15tjvKn+AUF7p3IUjEHXvdIVJ/VV7JF2K4oZQ1pzRa9d9p2ydKw+XzqNw+bl74h0fcxlmx5FhUfvbfPSL7hFrJ0TOZLpDp1Zh23SWSJ2Bzqw9LmwIoeYxJZJrYrAscZC1wPTqMUWRr2unDwFq1T6f+NUmTrs6g79t9x3lFcO5DlZdGi2/i7LTBZYnY/D4zH4hNyIUvHeotGob3iOMYKWTamiBOnHsEZtgdZKvZb/AFjzyBLfy111wAAAABJRU5ErkJggg==';
 
 // ── RESULTS ───────────────────────────────────────────────────
-const results = {};
+// Seed with completed games (updated by live polling)
+const results = {
+  'Nebraska': 'won', 'Troy': 'lost',
+  'TCU': 'won', 'Ohio State': 'lost',
+  'Louisville': 'won', 'South Florida': 'lost',
+  'High Point': 'won', 'Wisconsin': 'lost',
+};
 
 // ── GAME SCORES ───────────────────────────────────────────────
 // keyed by our team name: { score1, score2, state:'pre'|'in'|'post', clock, period }
-const gameScores = {};
+// Seed with completed games (updated by live polling)
+const gameScores = {
+  'Nebraska': { score1:76, score2:47, state:'post', clock:'0:00', period:'2H' },
+  'Troy': { score1:47, score2:76, state:'post', clock:'0:00', period:'2H' },
+  'TCU': { score1:66, score2:64, state:'post', clock:'0:00', period:'2H' },
+  'Ohio State': { score1:64, score2:66, state:'post', clock:'0:00', period:'2H' },
+  'Louisville': { score1:83, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'South Florida': { score1:79, score2:83, state:'post', clock:'0:00', period:'2H' },
+  'High Point': { score1:83, score2:82, state:'post', clock:'0:00', period:'2H' },
+  'Wisconsin': { score1:82, score2:83, state:'post', clock:'0:00', period:'2H' },
+};
 
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(id, btn) {
