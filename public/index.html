@@ -289,6 +289,46 @@
   .status-dot { width:7px; height:7px; border-radius:50%; background:var(--gray); flex-shrink:0; }
   .status-dot.alive { background:#22c55e; }
   .status-dot.elim { background:#ef4444; }
+
+  /* ── TERMINATORS TAB ── */
+  .terminators-header {
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    padding:24px 20px 8px; max-width:900px; margin:0 auto;
+  }
+  .terminators-header img { height:60px; border-radius:6px; }
+  .terminators-header h2 {
+    font-family:'Barlow Condensed',sans-serif; font-size:28px;
+    font-weight:800; color:#ef4444; text-transform:uppercase; letter-spacing:2px; margin:0;
+  }
+  .terminators-list {
+    max-width:900px; margin:0 auto; padding:12px 20px 40px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .terminator-card {
+    background:var(--dark-card); border:1px solid var(--card-border);
+    border-radius:8px; padding:14px 18px;
+    display:flex; align-items:center; gap:16px;
+    animation:fadeUp 0.4s ease both;
+  }
+  .terminator-rank {
+    font-family:'Barlow Condensed',sans-serif; font-size:28px;
+    font-weight:800; color:#ef4444; min-width:32px; text-align:center;
+  }
+  .terminator-logo { width:48px; height:48px; object-fit:contain; }
+  .terminator-info { flex:1; }
+  .terminator-team {
+    font-family:'Barlow Condensed',sans-serif; font-size:20px;
+    font-weight:700; color:#fff; text-transform:uppercase;
+  }
+  .terminator-detail { font-size:12px; color:#8aa0bc; margin-top:2px; }
+  .terminator-kills {
+    font-family:'Barlow Condensed',sans-serif; font-size:32px;
+    font-weight:800; color:#ef4444; text-align:center; min-width:50px; line-height:1;
+  }
+  .terminator-kills-label {
+    font-size:9px; color:#ef4444; text-transform:uppercase;
+    letter-spacing:1px; font-weight:700; text-align:center;
+  }
 </style>
 </head>
 <body>
@@ -310,6 +350,7 @@
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('games',this)">Round of 64</button>
   <button class="tab-btn" onclick="switchTab('participants',this)">Participants</button>
+  <button class="tab-btn" onclick="switchTab('terminators',this)">Top Terminators</button>
 </div>
 <div id="games" class="tab-panel active">
   <div id="app"></div>
@@ -319,6 +360,9 @@
     <input id="participant-search" type="text" placeholder="Search by name..." oninput="renderParticipants()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--card-border);background:var(--dark-card);color:#fff;font-size:14px;outline:none;box-sizing:border-box;">
   </div>
   <div id="participants-grid" class="participants-grid"></div>
+</div>
+<div id="terminators" class="tab-panel">
+  <div id="terminators-content"></div>
 </div>
 </div>
 <footer>SURVIVOR POOL 2026 &middot; MARCH MADNESS</footer>
@@ -618,6 +662,92 @@ function switchTab(id, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  if (id === 'terminators') renderTerminators();
+}
+
+// ── TERMINATORS RENDER ───────────────────────────────────────
+const TERMINATOR_IMG = 'https://giecdn.blob.core.windows.net/fileuploads/image/2019/10/22/terminator.jpg';
+
+function renderTerminators() {
+  // Find teams that won and how many participants they eliminated
+  const terminators = [];
+  schedule.forEach(g => {
+    // Check team1 winning (team2 pickers eliminated)
+    if (results[g.team1] === 'won' && typeof g.seed2 === 'number') {
+      const killed = (teamPickers[g.team2] || []).length;
+      if (killed > 0) {
+        const s = gameScores[g.team1];
+        terminators.push({
+          team: g.team1, seed: g.seed1,
+          loser: g.team2, loserSeed: g.seed2,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: killed, round: 'Round of 64',
+          victims: teamPickers[g.team2] || [],
+        });
+      }
+    }
+    // Check team2 winning (team1 pickers eliminated)
+    if (typeof g.seed2 === 'number' && results[g.team2] === 'won') {
+      const killed = (teamPickers[g.team1] || []).length;
+      if (killed > 0) {
+        const s = gameScores[g.team2];
+        terminators.push({
+          team: g.team2, seed: g.seed2,
+          loser: g.team1, loserSeed: g.seed1,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: killed, round: 'Round of 64',
+          victims: teamPickers[g.team1] || [],
+        });
+      }
+    }
+  });
+
+  // Sort by kills descending
+  terminators.sort((a, b) => b.kills - a.kills);
+
+  const totalElim = terminators.reduce((sum, t) => sum + t.kills, 0);
+
+  let html = `
+    <div class="terminators-header">
+      <img src="${TERMINATOR_IMG}" alt="Terminator">
+      <div>
+        <h2>Top Terminators</h2>
+        <div style="color:#8aa0bc;font-size:13px;text-align:center;">
+          <span style="color:#ef4444;font-weight:800;font-size:18px;">${totalElim}</span> total eliminated
+        </div>
+      </div>
+      <img src="${TERMINATOR_IMG}" alt="Terminator">
+    </div>`;
+
+  if (terminators.length === 0) {
+    html += `<div style="text-align:center;color:#8aa0bc;padding:40px 20px;font-size:16px;">No terminations yet. Games are still in progress...</div>`;
+  } else {
+    html += '<div class="terminators-list">';
+    terminators.forEach((t, i) => {
+      const logoSrc = LOGOS[t.team];
+      const logoHtml = logoSrc
+        ? `<img class="terminator-logo" src="${logoSrc}" alt="${t.team}">`
+        : `<div class="terminator-logo" style="display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:12px;">${t.team}</div>`;
+      const victimChips = t.victims.map(v => `<span style="font-size:10px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:1px 6px;border-radius:10px;white-space:nowrap;">${v}</span>`).join(' ');
+      html += `
+        <div class="terminator-card" style="animation-delay:${i * 50}ms">
+          <div class="terminator-rank">#${i + 1}</div>
+          ${logoHtml}
+          <div class="terminator-info">
+            <div class="terminator-team">(${t.seed}) ${t.team}</div>
+            <div class="terminator-detail">${t.round} · beat (${t.loserSeed}) ${t.loser} · ${t.score} FINAL</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${victimChips}</div>
+          </div>
+          <div>
+            <div class="terminator-kills">${t.kills}</div>
+            <div class="terminator-kills-label">eliminated</div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('terminators-content').innerHTML = html;
 }
 
 // ── PARTICIPANTS RENDER ───────────────────────────────────────
@@ -876,6 +1006,7 @@ async function fetchScores(manual = false) {
     if (updated) {
       render();
       renderParticipants();
+      renderTerminators();
     }
   } catch(err) {
     setLiveStatus('error', 'Could not reach ESPN — will retry');
