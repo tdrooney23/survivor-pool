@@ -69,7 +69,11 @@
     animation:fadeUp 0.4s ease both;
     display:flex; flex-direction:column;
   }
+  .game-card.card-won { border:2px solid #22c55e; }
+  .game-card.card-lost { border:2px solid #ef4444; }
   .game-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(29,91,191,0.3); }
+  .picker-chip.chip-won { background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.4); color:#22c55e; }
+  .picker-chip.chip-elim { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.4); color:#ef4444; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-20px)} }
 
@@ -494,8 +498,37 @@ function render() {
     return cards;
   }
 
+  // Build set of participants who have any loss
+  const elimSet = new Set();
+  // Build set of participants who have at least one win (and no loss)
+  const wonSet = new Set();
+  allParticipants.forEach(name => {
+    const [t1, t2] = picksMap[name] || [];
+    const hasLoss = (t1 && results[t1] === 'lost') || (t2 && results[t2] === 'lost');
+    const hasWin = (t1 && results[t1] === 'won') || (t2 && results[t2] === 'won');
+    if (hasLoss) elimSet.add(name);
+    else if (hasWin) wonSet.add(name);
+  });
+
+  function chipClass(name) {
+    if (elimSet.has(name)) return 'picker-chip chip-elim';
+    if (wonSet.has(name)) return 'picker-chip chip-won';
+    return 'picker-chip';
+  }
+
   const thu = buildCards('THU');
   const fri = buildCards('FRI');
+
+  // Sort: completed games to the end
+  function sortCards(cards) {
+    return cards.sort((a, b) => {
+      const aDone = results[a.team] === 'won' || results[a.team] === 'lost' ? 1 : 0;
+      const bDone = results[b.team] === 'won' || results[b.team] === 'lost' ? 1 : 0;
+      return aDone - bDone;
+    });
+  }
+  sortCards(thu);
+  sortCards(fri);
 
   let html = '';
   let idx = 0;
@@ -505,9 +538,11 @@ function render() {
     html += `<div class="day-divider">${label}</div><div class="games-grid">`;
     cards.forEach(c => {
       const pickers = teamPickers[c.team] || [];
-      const chips = pickers.map(p=>`<span class="picker-chip">${p}</span>`).join('');
+      const chips = pickers.map(p=>`<span class="${chipClass(p)}">${p}</span>`).join('');
+      const r = results[c.team];
+      const cardClass = r === 'won' ? 'card-won' : r === 'lost' ? 'card-lost' : '';
       html += `
-      <div class="game-card" style="animation-delay:${idx*35}ms">
+      <div class="game-card ${cardClass}" style="animation-delay:${idx*35}ms">
         <div class="card-body">
           <div class="logo-block">
             <div class="team-seed">SEED ${c.seed}</div>
