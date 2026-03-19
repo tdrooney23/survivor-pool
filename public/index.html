@@ -685,43 +685,49 @@ function switchTab(id, btn) {
 const TERMINATOR_IMG = 'https://giecdn.blob.core.windows.net/fileuploads/image/2019/10/22/terminator.jpg';
 
 function renderTerminators() {
-  // Find teams that won and how many participants they eliminated
-  const terminators = [];
+  // Collect individual game wins that eliminated pool participants
+  const gameWins = [];
   schedule.forEach(g => {
-    // Check team1 winning (team2 pickers eliminated)
     if (results[g.team1] === 'won' && typeof g.seed2 === 'number') {
-      const killed = (teamPickers[g.team2] || []).length;
-      if (killed > 0) {
+      const victims = teamPickers[g.team2] || [];
+      if (victims.length > 0) {
         const s = gameScores[g.team1];
-        terminators.push({
+        gameWins.push({
           team: g.team1, seed: g.seed1,
           loser: g.team2, loserSeed: g.seed2,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: killed, round: 'Round of 64',
-          victims: teamPickers[g.team2] || [],
+          kills: victims.length, round: 'Round of 64',
+          victims,
         });
       }
     }
-    // Check team2 winning (team1 pickers eliminated)
     if (typeof g.seed2 === 'number' && results[g.team2] === 'won') {
-      const killed = (teamPickers[g.team1] || []).length;
-      if (killed > 0) {
+      const victims = teamPickers[g.team1] || [];
+      if (victims.length > 0) {
         const s = gameScores[g.team2];
-        terminators.push({
+        gameWins.push({
           team: g.team2, seed: g.seed2,
           loser: g.team1, loserSeed: g.seed1,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: killed, round: 'Round of 64',
-          victims: teamPickers[g.team1] || [],
+          kills: victims.length, round: 'Round of 64',
+          victims,
         });
       }
     }
   });
 
-  // Sort by kills descending
-  terminators.sort((a, b) => b.kills - a.kills);
+  // Aggregate by team
+  const teamMap = {};
+  gameWins.forEach(w => {
+    if (!teamMap[w.team]) {
+      teamMap[w.team] = { team: w.team, seed: w.seed, totalKills: 0, games: [] };
+    }
+    teamMap[w.team].totalKills += w.kills;
+    teamMap[w.team].games.push(w);
+  });
 
-  const totalElim = terminators.reduce((sum, t) => sum + t.kills, 0);
+  const terminators = Object.values(teamMap).sort((a, b) => b.totalKills - a.totalKills);
+  const totalElim = terminators.reduce((sum, t) => sum + t.totalKills, 0);
 
   let html = `
     <div class="terminators-header">
@@ -744,19 +750,30 @@ function renderTerminators() {
       const logoHtml = logoSrc
         ? `<img class="terminator-logo" src="${logoSrc}" alt="${t.team}">`
         : `<div class="terminator-logo" style="display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:12px;">${t.team}</div>`;
-      const victimChips = t.victims.map(v => `<span style="font-size:10px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:1px 6px;border-radius:10px;white-space:nowrap;">${v}</span>`).join(' ');
+
+      // Build game-by-game breakdown
+      const gamesHtml = t.games.map(g => {
+        const victimChips = g.victims.map(v =>
+          `<span style="font-size:10px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:1px 6px;border-radius:10px;white-space:nowrap;">${v}</span>`
+        ).join(' ');
+        return `
+          <div style="margin-top:8px;">
+            <div class="terminator-detail">${g.round} · beat (${g.loserSeed}) ${g.loser} · ${g.score} FINAL — <span style="color:#ef4444;font-weight:700;">${g.kills} eliminated</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${victimChips}</div>
+          </div>`;
+      }).join('');
+
       html += `
-        <div class="terminator-card" style="animation-delay:${i * 50}ms">
+        <div class="terminator-card" style="animation-delay:${i * 50}ms;align-items:flex-start;">
           <div class="terminator-rank">#${i + 1}</div>
           ${logoHtml}
           <div class="terminator-info">
             <div class="terminator-team">(${t.seed}) ${t.team}</div>
-            <div class="terminator-detail">${t.round} · beat (${t.loserSeed}) ${t.loser} · ${t.score} FINAL</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${victimChips}</div>
+            ${gamesHtml}
           </div>
-          <div>
-            <div class="terminator-kills">${t.kills}</div>
-            <div class="terminator-kills-label">eliminated</div>
+          <div style="padding-top:4px;">
+            <div class="terminator-kills">${t.totalKills}</div>
+            <div class="terminator-kills-label">total</div>
           </div>
         </div>`;
     });
