@@ -833,38 +833,34 @@ async function fetchScores(manual = false) {
         ? (comp.status.period <= 2 ? `${comp.status.period}H` : `OT`)
         : '';
 
-      // Find our team in this matchup
+      // Find our teams in this matchup
       const competitors = comp.competitors || [];
-      let ourTeam = null, ourScore = 0, oppScore = 0, ourWon = false;
-
-      competitors.forEach(t => {
-        const displayName = t.team?.displayName || '';
+      const mapped = competitors.map(t => {
         const shortName = t.team?.shortDisplayName || '';
-        const mapped = espnTeamMap[shortName] || espnTeamMap[displayName];
-        if (mapped) {
-          ourTeam = mapped;
-          ourScore = parseInt(t.score) || 0;
-          ourWon = t.winner === true;
-        } else {
-          oppScore = parseInt(t.score) || 0;
-        }
+        const displayName = t.team?.displayName || '';
+        return {
+          name: espnTeamMap[shortName] || espnTeamMap[displayName] || null,
+          score: parseInt(t.score) || 0,
+          won: t.winner === true,
+        };
       });
 
-      if (!ourTeam) return;
+      // Update scores for each mapped team
+      mapped.forEach((m, i) => {
+        if (!m.name) return;
+        const oppScore = mapped[1 - i]?.score || 0;
+        const prev = JSON.stringify(gameScores[m.name]);
+        gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
+        if (JSON.stringify(gameScores[m.name]) !== prev) updated = true;
 
-      // Update gameScores
-      const prev = JSON.stringify(gameScores[ourTeam]);
-      gameScores[ourTeam] = { score1: ourScore, score2: oppScore, state, clock, period };
-      if (JSON.stringify(gameScores[ourTeam]) !== prev) updated = true;
-
-      // Update results on completion
-      if (isFinished) {
-        const newResult = ourWon ? 'won' : 'lost';
-        if (results[ourTeam] !== newResult) {
-          results[ourTeam] = newResult;
-          updated = true;
+        if (isFinished) {
+          const newResult = m.won ? 'won' : 'lost';
+          if (results[m.name] !== newResult) {
+            results[m.name] = newResult;
+            updated = true;
+          }
         }
-      }
+      });
     });
 
     const liveGames = events.filter(e => {
