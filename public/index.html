@@ -474,26 +474,40 @@ function logoEl(team) {
 function render() {
   document.getElementById('mmlogo').src = LOGOS['__mm__'];
 
-  const thu = schedule.filter(g=>g.day==='THU' && (teamPickers[g.team1]||[]).length>0);
-  const fri = schedule.filter(g=>g.day==='FRI' && (teamPickers[g.team1]||[]).length>0);
+  // Build card entries for both sides of each game
+  function buildCards(day) {
+    const cards = [];
+    schedule.filter(g => g.day === day).forEach(g => {
+      if ((teamPickers[g.team1]||[]).length > 0) {
+        const oppLabel = typeof g.seed2==='number' ? `(${g.seed2}) ${g.team2}` : g.team2;
+        cards.push({ team: g.team1, seed: g.seed1, opp: oppLabel, time: g.time, net: g.net });
+      }
+      if (typeof g.seed2==='number' && (teamPickers[g.team2]||[]).length > 0) {
+        cards.push({ team: g.team2, seed: g.seed2, opp: `(${g.seed1}) ${g.team1}`, time: g.time, net: g.net });
+      }
+    });
+    return cards;
+  }
+
+  const thu = buildCards('THU');
+  const fri = buildCards('FRI');
 
   let html = '';
   let idx = 0;
 
-  function renderGroup(games, label) {
-    if (!games.length) return;
+  function renderGroup(cards, label) {
+    if (!cards.length) return;
     html += `<div class="day-divider">${label}</div><div class="games-grid">`;
-    games.forEach(g => {
-      const pickers = teamPickers[g.team1] || [];
+    cards.forEach(c => {
+      const pickers = teamPickers[c.team] || [];
       const chips = pickers.map(p=>`<span class="picker-chip">${p}</span>`).join('');
-      const oppLabel = typeof g.seed2==='number' ? `(${g.seed2}) ${g.team2}` : g.team2;
       html += `
       <div class="game-card" style="animation-delay:${idx*35}ms">
         <div class="card-body">
           <div class="logo-block">
-            <div class="team-seed">SEED ${g.seed1}</div>
-            ${logoEl(g.team1)}
-            <div class="team-name">${g.team1}</div>
+            <div class="team-seed">SEED ${c.seed}</div>
+            ${logoEl(c.team)}
+            <div class="team-name">${c.team}</div>
           </div>
           <div class="card-divider"></div>
           <div class="pickers-section">
@@ -502,10 +516,10 @@ function render() {
           </div>
         </div>
         <div class="card-footer">
-          <div class="vs-info"><em>VS</em>${oppLabel}${scoreHTML(g.team1)}</div>
+          <div class="vs-info"><em>VS</em>${c.opp}${scoreHTML(c.team)}</div>
           <div class="footer-right">
-            <span class="game-time">${g.time}</span>
-            <span class="network-badge ${netClass(g.net)}">${g.net}</span>
+            <span class="game-time">${c.time}</span>
+            <span class="network-badge ${netClass(c.net)}">${c.net}</span>
           </div>
         </div>
       </div>`;
@@ -736,6 +750,7 @@ const espnTeamMap = {
   'Akron': 'Akron', 'Gonzaga': 'Gonzaga', 'Villanova': 'Villanova',
   'Saint Mary\'s': "Saint Mary's", 'Texas A&M': 'Texas A&M',
   'Texas': 'Texas',
+  'Saint Louis': 'Saint Louis',
 };
 
 let lastUpdated = null;
