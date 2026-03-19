@@ -593,10 +593,14 @@ function render() {
   document.getElementById('app').innerHTML = bannerHtml + html;
 
   const teamsShown = thu.length + fri.length;
+  const aliveCount = allParticipants.filter(n => !elimSet.has(n)).length;
+  const elimCount = elimSet.size;
   document.getElementById('stats').innerHTML = `
     <div>Participants: <span>${allParticipants.length}</span></div>
     <div>Paid: <span>${paidList.size}</span></div>
-    <div>Picked: <span>${allParticipants.filter(n => { const p = picksMap[n] || []; return p[0] || p[1]; }).length}</span></div>`;
+    <div>Picked: <span>${allParticipants.filter(n => { const p = picksMap[n] || []; return p[0] || p[1]; }).length}</span></div>
+    <div>Alive: <span style="color:#22c55e;">${aliveCount}</span></div>
+    <div>Eliminated: <span style="color:#ef4444;">${elimCount}</span></div>`;
 }
 
 const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABXUlEQVRoge3Z0a3DIAwFUDMBI2TUrJoRMgF+ie0LJE+t+omla1WRW86fW2OoyG+xK+K09/XKmmWlr+hBtgY7o2oXC7z5UrlWw5NlY756g2rJUcB6QpaVufRa25MsPbP+rAG+f0PI1mZzi46ejNVPnZxsaaYI/KIfdfcgS8UeUTEkS3kvkeVhe6+7xfVJ1Hpr40WWiok155HUvu1KALKcTOchWds4yXp+kGVi/nO+K15tjvKn+AUF7p3IUjEHXvdIVJ/VV7JF2K4oZQ1pzRa9d9p2ydKw+XzqNw+bl74h0fcxlmx5FhUfvbfPSL7hFrJ0TOZLpDp1Zh23SWSJ2Bzqw9LmwIoeYxJZJrYrAscZC1wPTqMUWRr2unDwFq1T6f+NUmTrs6g79t9x3lFcO5DlZdGi2/i7LTBZYnY/D4zH4hNyIUvHeotGob3iOMYKWTamiBOnHsEZtgdZKvZb/AFjzyBLfy111wAAAABJRU5ErkJggg==';
