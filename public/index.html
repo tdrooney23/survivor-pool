@@ -650,6 +650,28 @@ function render() {
 
 const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABXUlEQVRoge3Z0a3DIAwFUDMBI2TUrJoRMgF+ie0LJE+t+omla1WRW86fW2OoyG+xK+K09/XKmmWlr+hBtgY7o2oXC7z5UrlWw5NlY756g2rJUcB6QpaVufRa25MsPbP+rAG+f0PI1mZzi46ejNVPnZxsaaYI/KIfdfcgS8UeUTEkS3kvkeVhe6+7xfVJ1Hpr40WWiok155HUvu1KALKcTOchWds4yXp+kGVi/nO+K15tjvKn+AUF7p3IUjEHXvdIVJ/VV7JF2K4oZQ1pzRa9d9p2ydKw+XzqNw+bl74h0fcxlmx5FhUfvbfPSL7hFrJ0TOZLpDp1Zh23SWSJ2Bzqw9LmwIoeYxJZJrYrAscZC1wPTqMUWRr2unDwFq1T6f+NUmTrs6g79t9x3lFcO5DlZdGi2/i7LTBZYnY/D4zH4hNyIUvHeotGob3iOMYKWTamiBOnHsEZtgdZKvZb/AFjzyBLfy111wAAAABJRU5ErkJggg==';
 
+// ── PERSISTENCE ──────────────────────────────────────────────
+// Save completed results to localStorage so they survive ESPN API day-rotation
+function saveResults() {
+  try {
+    localStorage.setItem('sp_results', JSON.stringify(results));
+    localStorage.setItem('sp_gameScores', JSON.stringify(gameScores));
+  } catch(e) {}
+}
+function loadSavedResults() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('sp_results') || '{}');
+    const savedScores = JSON.parse(localStorage.getItem('sp_gameScores') || '{}');
+    // Merge saved data into current objects (saved data fills in gaps, doesn't overwrite seed)
+    Object.keys(saved).forEach(k => { if (!results[k]) results[k] = saved[k]; });
+    Object.keys(savedScores).forEach(k => {
+      if (!gameScores[k] || gameScores[k].state !== 'post') {
+        if (savedScores[k]?.state === 'post') gameScores[k] = savedScores[k];
+      }
+    });
+  } catch(e) {}
+}
+
 // ── RESULTS ───────────────────────────────────────────────────
 // Seed with completed games (updated by live polling)
 const results = {
@@ -1088,6 +1110,7 @@ async function fetchScores(manual = false) {
     setLiveStatus(liveGames > 0 ? 'live' : '', `Updated ${timeStr}${liveMsg}`);
 
     if (updated) {
+      saveResults();
       render();
       renderParticipants();
       renderTerminators();
@@ -1121,6 +1144,7 @@ function copyHandle() {
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
+loadSavedResults();
 render();
 renderParticipants();
 renderTerminators();
