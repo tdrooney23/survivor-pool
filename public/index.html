@@ -503,6 +503,7 @@ async function fetchSheetData() {
     buildFromData(data.participants, data.picks, data.paid);
     render();
     renderParticipants();
+    renderTerminators();
   } catch(err) {
     console.warn('Sheet fetch error, using hardcoded data:', err);
     buildFromData(allParticipants, rawPicks, []);
@@ -1072,6 +1073,7 @@ function copyHandle() {
 }
 render();
 renderParticipants();
+renderTerminators();
 fetchSheetData();
 startPolling();
 </script>
