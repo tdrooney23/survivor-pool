@@ -587,7 +587,7 @@ function render() {
       const r = results[c.team];
       const cardClass = r === 'won' ? 'card-won' : r === 'lost' ? 'card-lost' : '';
       html += `
-      <div class="game-card ${cardClass}" style="animation-delay:${idx*35}ms">
+      <div class="game-card ${cardClass}" data-team="${c.team}" style="animation-delay:${idx*35}ms">
         <div class="card-body">
           <div class="logo-block">
             <div class="team-seed">SEED ${c.seed}</div>
@@ -601,7 +601,7 @@ function render() {
           </div>
         </div>
         <div class="card-footer">
-          <div class="vs-info"><em>VS</em>${c.opp}${scoreHTML(c.team)}</div>
+          <div class="vs-info"><em>VS</em>${c.opp}<span class="score-area" data-team="${c.team}">${scoreHTML(c.team)}</span></div>
           <div class="footer-right">
             <span class="game-time">${c.time}</span>
             <span class="network-badge ${netClass(c.net)}">${c.net}</span>
@@ -996,6 +996,14 @@ function scoreHTML(team) {
 }
 
 
+// ── IN-PLACE SCORE UPDATES (no DOM rebuild) ─────────────────
+function updateScoresInPlace() {
+  document.querySelectorAll('.score-area').forEach(el => {
+    const team = el.dataset.team;
+    if (team) el.innerHTML = scoreHTML(team);
+  });
+}
+
 // Maps ESPN team names/abbrevs → our pick names
 const espnTeamMap = {
   'Duke': 'Duke', 'Michigan': 'Michigan', 'Florida': 'Florida',
@@ -1055,7 +1063,8 @@ async function fetchScores(manual = false) {
     if (!res.ok) throw new Error('ESPN API error');
     const data = await res.json();
 
-    let updated = false;
+    let scoresChanged = false;
+    let resultsChanged = false;
     const events = data.events || [];
 
     events.forEach(event => {
@@ -1087,13 +1096,13 @@ async function fetchScores(manual = false) {
         const oppScore = mapped[1 - i]?.score || 0;
         const prev = JSON.stringify(gameScores[m.name]);
         gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
-        if (JSON.stringify(gameScores[m.name]) !== prev) updated = true;
+        if (JSON.stringify(gameScores[m.name]) !== prev) scoresChanged = true;
 
         if (isFinished) {
           const newResult = m.won ? 'won' : 'lost';
           if (results[m.name] !== newResult) {
             results[m.name] = newResult;
-            updated = true;
+            resultsChanged = true;
           }
         }
       });
@@ -1109,11 +1118,16 @@ async function fetchScores(manual = false) {
     const liveMsg = liveGames > 0 ? ` · ${liveGames} game${liveGames>1?'s':''} live` : '';
     setLiveStatus(liveGames > 0 ? 'live' : '', `Updated ${timeStr}${liveMsg}`);
 
-    if (updated) {
+    if (resultsChanged) {
+      // A game finished — full rebuild to re-sort cards, update chips, etc.
       saveResults();
       render();
       renderParticipants();
       renderTerminators();
+    } else if (scoresChanged) {
+      // Just score/clock updates — patch in place, no flicker
+      saveResults();
+      updateScoresInPlace();
     }
   } catch(err) {
     setLiveStatus('error', 'Could not reach ESPN — will retry');
