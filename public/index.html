@@ -334,7 +334,7 @@
 <body>
 <header>
   <img class="mm-logo" id="mmlogo" alt="March Madness">
-  <div class="pool-title">2026 Survivor Pool &mdash; Round of 64</div>
+  <div class="pool-title">2026 Survivor Pool &mdash; Round of 32</div>
 </header>
 <div id="loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;">
   <div style="font-size:48px;animation:bounce 0.6s ease infinite alternate;">🏀</div>
@@ -348,7 +348,7 @@
   <button class="refresh-btn" onclick="fetchScores(true)">↻ Refresh</button>
 </div>
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('games',this)">Round of 64</button>
+  <button class="tab-btn active" onclick="switchTab('games',this)">Round of 32</button>
   <button class="tab-btn" onclick="switchTab('participants',this)">Participants</button>
   <button class="tab-btn" onclick="switchTab('terminators',this)">Top Terminators</button>
 </div>
@@ -376,8 +376,8 @@ const CIRCLE_LOGOS = {
   'Michigan State': 'https://a.espncdn.com/i/teamlogos/ncaa/500-dark/127.png',
 };
 
-const schedule = [
-  // THURSDAY
+// ── FROZEN R64 DATA ──────────────────────────────────────────
+const r64Schedule = [
   {day:'THU', time:'12:15 PM', net:'CBS',   seed1:8,  team1:'Ohio State',    seed2:9,   team2:'TCU'},
   {day:'THU', time:'12:40 PM', net:'truTV', seed1:4,  team1:'Nebraska',      seed2:13,  team2:'Troy'},
   {day:'THU', time:'1:30 PM',  net:'TNT',   seed1:6,  team1:'Louisville',    seed2:11,  team2:'South Florida'},
@@ -387,14 +387,13 @@ const schedule = [
   {day:'THU', time:'4:05 PM',  net:'TNT',   seed1:3,  team1:'Michigan State',seed2:14,  team2:'N. Dakota St'},
   {day:'THU', time:'4:25 PM',  net:'TBS',   seed1:4,  team1:'Arkansas',      seed2:13,  team2:"Hawai'i"},
   {day:'THU', time:'6:50 PM',  net:'TNT',   seed1:6,  team1:'North Carolina',seed2:11,  team2:'VCU'},
-  {day:'THU', time:'7:10 PM',  net:'CBS',   seed1:1,  team1:'Michigan',      seed2:16,   team2:'Howard'},
-  {day:'THU', time:'7:25 PM',  net:'TBS',   seed1:6,  team1:'BYU',           seed2:11,   team2:'Texas'},
+  {day:'THU', time:'7:10 PM',  net:'CBS',   seed1:1,  team1:'Michigan',      seed2:16,  team2:'Howard'},
+  {day:'THU', time:'7:25 PM',  net:'TBS',   seed1:6,  team1:'BYU',           seed2:11,  team2:'Texas'},
   {day:'THU', time:'7:35 PM',  net:'truTV', seed1:7,  team1:"Saint Mary's",  seed2:10,  team2:'Texas A&M'},
   {day:'THU', time:'9:25 PM',  net:'TNT',   seed1:3,  team1:'Illinois',      seed2:14,  team2:'Penn'},
   {day:'THU', time:'9:45 PM',  net:'CBS',   seed1:8,  team1:'Georgia',       seed2:9,   team2:'Saint Louis'},
   {day:'THU', time:'10:00 PM', net:'TNT',   seed1:3,  team1:'Gonzaga',       seed2:14,  team2:'Kennesaw St'},
   {day:'THU', time:'10:10 PM', net:'truTV', seed1:2,  team1:'Houston',       seed2:15,  team2:'Idaho'},
-  // FRIDAY
   {day:'FRI', time:'12:15 PM', net:'CBS',   seed1:7,  team1:'Kentucky',      seed2:10,  team2:'Santa Clara'},
   {day:'FRI', time:'12:40 PM', net:'truTV', seed1:5,  team1:'Texas Tech',    seed2:12,  team2:'Akron'},
   {day:'FRI', time:'1:35 PM',  net:'TNT',   seed1:1,  team1:'Arizona',       seed2:16,  team2:'LIU'},
@@ -402,38 +401,108 @@ const schedule = [
   {day:'FRI', time:'2:50 PM',  net:'CBS',   seed1:2,  team1:'Iowa State',    seed2:15,  team2:'Tennessee St'},
   {day:'FRI', time:'3:15 PM',  net:'truTV', seed1:4,  team1:'Alabama',       seed2:13,  team2:'Hofstra'},
   {day:'FRI', time:'4:10 PM',  net:'TNT',   seed1:8,  team1:'Villanova',     seed2:9,   team2:'Utah State'},
-  {day:'FRI', time:'4:25 PM',  net:'TBS',   seed1:6,  team1:'Tennessee',     seed2:11,   team2:'Miami (OH)'},
+  {day:'FRI', time:'4:25 PM',  net:'TBS',   seed1:6,  team1:'Tennessee',     seed2:11,  team2:'Miami (OH)'},
   {day:'FRI', time:'6:50 PM',  net:'TNT',   seed1:8,  team1:'Clemson',       seed2:9,   team2:'Iowa'},
   {day:'FRI', time:'7:10 PM',  net:'CBS',   seed1:5,  team1:"St. John's",    seed2:12,  team2:'UNI'},
   {day:'FRI', time:'7:25 PM',  net:'TBS',   seed1:7,  team1:'UCLA',          seed2:10,  team2:'UCF'},
   {day:'FRI', time:'7:35 PM',  net:'truTV', seed1:2,  team1:'Purdue',        seed2:15,  team2:'Queens'},
-  {day:'FRI', time:'9:25 PM',  net:'TNT',   seed1:1,  team1:'Florida',       seed2:16,   team2:'Prairie View A&M'},
+  {day:'FRI', time:'9:25 PM',  net:'TNT',   seed1:1,  team1:'Florida',       seed2:16,  team2:'Prairie View A&M'},
   {day:'FRI', time:'9:45 PM',  net:'CBS',   seed1:4,  team1:'Kansas',        seed2:13,  team2:'Cal Baptist'},
   {day:'FRI', time:'10:00 PM', net:'TBS',   seed1:2,  team1:'UConn',         seed2:15,  team2:'Furman'},
   {day:'FRI', time:'10:10 PM', net:'truTV', seed1:7,  team1:'Miami',         seed2:10,  team2:'Missouri'},
 ];
 
-// ── PICKS ────────────────────────────────────────────────────
+const r64Picks = {
+  'Brad Bowden': ['Florida', 'Michigan'],
+  'Colin Wilson': ['Michigan State', 'Illinois'],
+  'Dane Swenson': ['Miami', "St. John's"],
+  'Nick Roark': ['Arkansas', 'Texas Tech'],
+  'Sellers': ['Kentucky', 'Vanderbilt'],
+  'Sydney': ['Wisconsin', 'Virginia'],
+};
+
+const r64Results = {
+  'Nebraska': 'won', 'Troy': 'lost',
+  'TCU': 'won', 'Ohio State': 'lost',
+  'Louisville': 'won', 'South Florida': 'lost',
+  'High Point': 'won', 'Wisconsin': 'lost',
+  'Duke': 'won', 'Siena': 'lost',
+  'Michigan State': 'won', 'N. Dakota St': 'lost',
+  'Arkansas': 'won', "Hawai'i": 'lost',
+  'Vanderbilt': 'won', 'McNeese': 'lost',
+  'VCU': 'won', 'North Carolina': 'lost',
+  'Michigan': 'won', 'Howard': 'lost',
+  'Texas': 'won', 'BYU': 'lost',
+  'Texas A&M': 'won', "Saint Mary's": 'lost',
+  'Illinois': 'won', 'Penn': 'lost',
+  'Saint Louis': 'won', 'Georgia': 'lost',
+  'Gonzaga': 'won', 'Kennesaw St': 'lost',
+  'Houston': 'won', 'Idaho': 'lost',
+  // Friday results — seed after games complete
+};
+
+const r64Scores = {
+  'Nebraska': { score1:76, score2:47, state:'post', clock:'0:00', period:'2H' },
+  'Troy': { score1:47, score2:76, state:'post', clock:'0:00', period:'2H' },
+  'TCU': { score1:66, score2:64, state:'post', clock:'0:00', period:'2H' },
+  'Ohio State': { score1:64, score2:66, state:'post', clock:'0:00', period:'2H' },
+  'Louisville': { score1:83, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'South Florida': { score1:79, score2:83, state:'post', clock:'0:00', period:'2H' },
+  'High Point': { score1:83, score2:82, state:'post', clock:'0:00', period:'2H' },
+  'Wisconsin': { score1:82, score2:83, state:'post', clock:'0:00', period:'2H' },
+  'Duke': { score1:71, score2:65, state:'post', clock:'0:00', period:'2H' },
+  'Siena': { score1:65, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Michigan State': { score1:92, score2:67, state:'post', clock:'0:00', period:'2H' },
+  'N. Dakota St': { score1:67, score2:92, state:'post', clock:'0:00', period:'2H' },
+  'Arkansas': { score1:97, score2:78, state:'post', clock:'0:00', period:'2H' },
+  "Hawai'i": { score1:78, score2:97, state:'post', clock:'0:00', period:'2H' },
+  'Vanderbilt': { score1:78, score2:68, state:'post', clock:'0:00', period:'2H' },
+  'McNeese': { score1:68, score2:78, state:'post', clock:'0:00', period:'2H' },
+  'VCU': { score1:82, score2:78, state:'post', clock:'0:00', period:'2H' },
+  'North Carolina': { score1:78, score2:82, state:'post', clock:'0:00', period:'2H' },
+  'Michigan': { score1:101, score2:80, state:'post', clock:'0:00', period:'2H' },
+  'Howard': { score1:80, score2:101, state:'post', clock:'0:00', period:'2H' },
+  'Texas': { score1:79, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'BYU': { score1:71, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'Texas A&M': { score1:63, score2:50, state:'post', clock:'0:00', period:'2H' },
+  "Saint Mary's": { score1:50, score2:63, state:'post', clock:'0:00', period:'2H' },
+  'Illinois': { score1:105, score2:70, state:'post', clock:'0:00', period:'2H' },
+  'Penn': { score1:70, score2:105, state:'post', clock:'0:00', period:'2H' },
+  'Saint Louis': { score1:102, score2:77, state:'post', clock:'0:00', period:'2H' },
+  'Georgia': { score1:77, score2:102, state:'post', clock:'0:00', period:'2H' },
+  'Gonzaga': { score1:73, score2:64, state:'post', clock:'0:00', period:'2H' },
+  'Kennesaw St': { score1:64, score2:73, state:'post', clock:'0:00', period:'2H' },
+  'Houston': { score1:78, score2:47, state:'post', clock:'0:00', period:'2H' },
+  'Idaho': { score1:47, score2:78, state:'post', clock:'0:00', period:'2H' },
+  // Friday scores — seed after games complete
+};
+
+// ── R32 SCHEDULE (update with actual matchups/times/networks before deploy) ──
+const schedule = [
+  // SATURDAY — placeholder; replace with real matchups before deploy
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:1, team1:'TBD', seed2:9, team2:'TBD'},
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:4, team1:'TBD', seed2:12, team2:'TBD'},
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:3, team1:'TBD', seed2:11, team2:'TBD'},
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:2, team1:'TBD', seed2:10, team2:'TBD'},
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:1, team1:'TBD', seed2:8, team2:'TBD'},
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:4, team1:'TBD', seed2:5, team2:'TBD'},
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:3, team1:'TBD', seed2:6, team2:'TBD'},
+  {day:'SAT', time:'TBD', net:'CBS',   seed1:2, team1:'TBD', seed2:7, team2:'TBD'},
+  // SUNDAY
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:1, team1:'TBD', seed2:9, team2:'TBD'},
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:4, team1:'TBD', seed2:5, team2:'TBD'},
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:3, team1:'TBD', seed2:6, team2:'TBD'},
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:2, team1:'TBD', seed2:10, team2:'TBD'},
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:1, team1:'TBD', seed2:8, team2:'TBD'},
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:4, team1:'TBD', seed2:12, team2:'TBD'},
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:3, team1:'TBD', seed2:11, team2:'TBD'},
+  {day:'SUN', time:'TBD', net:'CBS',   seed1:2, team1:'TBD', seed2:7, team2:'TBD'},
+];
+
+// ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
-  ['Brad Bowden','Florida','Michigan'],
-  ['Colin Wilson','Michigan State','Illinois'],
-  ['Dane Swenson','Miami',"St. John's"],
-  ['Nick Roark','Arkansas','Texas Tech'],
-  ['Sellers','Kentucky','Vanderbilt'],
-  ['Sydney','Wisconsin','Virginia'],
+  // ['Name', 'R32Team'] — update with actual R32 picks
 ];
-
-const randomPool = [
-  'Duke','Michigan','Florida','Kansas','Arizona','Iowa State',
-  'Houston','UConn','Illinois','Kentucky','Alabama','Tennessee',
-  'Arkansas','Wisconsin','Texas Tech','Virginia','Clemson','UCLA',
-  'Purdue','North Carolina'
-];
-
-function seededRand(seed) {
-  let s = seed;
-  return () => { s = (s*9301+49297)%233280; return s/233280; };
-}
 
 // ── SHEET CONFIG ─────────────────────────────────────────────
 // Paste your Apps Script Web App URL here after deploying
@@ -466,21 +535,27 @@ function normalizeTeam(t) {
       || t;
 }
 
-function buildFromData(participants, picks, paid) {
+function isAliveAfterR64(name) {
+  const picks = r64Picks[name];
+  if (!picks) return false;
+  return picks.every(t => r64Results[t] === 'won');
+}
+
+function buildFromData(participants, r32picks, paid) {
   // Rebuild allParticipants
   allParticipants = participants;
 
-  // Build picksMap from sheet data, normalizing team names
+  // Build picksMap from R32 picks (1 pick per participant)
   picksMap = {};
-  picks.forEach(([n, t1, t2]) => {
-    if (n) picksMap[n] = [normalizeTeam(t1), normalizeTeam(t2)];
+  r32picks.forEach(([n, t]) => {
+    if (n && t) picksMap[n] = [normalizeTeam(t)];
   });
 
   // Rebuild paidList from sheet
   paidList.clear();
   paid.forEach(name => { if (name) paidList.add(name); });
 
-  // Rebuild teamPickers
+  // Rebuild teamPickers from R32 picks
   teamPickers = {};
   allParticipants.forEach(name => {
     (picksMap[name] || []).forEach(t => {
@@ -500,7 +575,13 @@ async function fetchSheetData() {
     const res = await fetch(SHEET_URL);
     if (!res.ok) throw new Error('Sheet fetch failed');
     const data = await res.json();
-    buildFromData(data.participants, data.picks, data.paid);
+    // Update r64Picks from sheet data (R64 picks in columns D & E)
+    if (data.picks) {
+      data.picks.forEach(([n, t1, t2]) => {
+        if (n && !r64Picks[n]) r64Picks[n] = [normalizeTeam(t1), normalizeTeam(t2)];
+      });
+    }
+    buildFromData(data.participants, data.r32picks || [], data.paid);
     render();
     renderParticipants();
     renderTerminators();
@@ -543,16 +624,14 @@ function render() {
     return cards;
   }
 
-  // Build set of participants who have any loss
+  // Build set of participants who have any loss (R64 or R32)
   const elimSet = new Set();
-  // Build set of participants who have at least one win (and no loss)
+  // Build set of participants who have at least one R32 win (and no loss)
   const wonSet = new Set();
   allParticipants.forEach(name => {
-    const [t1, t2] = picksMap[name] || [];
-    const hasLoss = (t1 && results[t1] === 'lost') || (t2 && results[t2] === 'lost');
-    const hasWin = (t1 && results[t1] === 'won') || (t2 && results[t2] === 'won');
-    if (hasLoss) elimSet.add(name);
-    else if (hasWin) wonSet.add(name);
+    if (isEliminated(name)) { elimSet.add(name); return; }
+    const [r32t] = picksMap[name] || [];
+    if (r32t && results[r32t] === 'won') wonSet.add(name);
   });
 
   function chipClass(name) {
@@ -561,8 +640,8 @@ function render() {
     return 'picker-chip';
   }
 
-  const thu = buildCards('THU');
-  const fri = buildCards('FRI');
+  const sat = buildCards('SAT');
+  const sun = buildCards('SUN');
 
   // Sort: completed games to the end
   function sortCards(cards) {
@@ -572,8 +651,8 @@ function render() {
       return aDone - bDone;
     });
   }
-  sortCards(thu);
-  sortCards(fri);
+  sortCards(sat);
+  sortCards(sun);
 
   let html = '';
   let idx = 0;
@@ -613,10 +692,11 @@ function render() {
     html += '</div>';
   }
 
-  // Not picked yet banner
+  // Not picked yet banner — alive participants without an R32 pick
   const notPicked = allParticipants.filter(n => {
-    const [t1, t2] = picksMap[n] || [];
-    return !t1 || !t2;
+    if (!isAliveAfterR64(n)) return false;
+    const [t] = picksMap[n] || [];
+    return !t;
   });
   let bannerHtml = '';
   if (notPicked.length > 0) {
@@ -625,25 +705,25 @@ function render() {
     <div style="max-width:1400px;margin:0 auto;padding:0 20px 16px;">
       <div style="background:#0f1f3d;border:1px solid rgba(239,180,0,0.25);border-radius:8px;padding:12px 16px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f0b400;margin-bottom:8px;">
-          Picks Not Yet Submitted (${notPicked.length})
+          R32 Picks Not Yet Submitted (${notPicked.length})
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
       </div>
     </div>`;
   }
 
-  renderGroup(fri, 'Friday, March 20');
-  renderGroup(thu, 'Thursday, March 19');
+  renderGroup(sat, 'Saturday, March 21');
+  renderGroup(sun, 'Sunday, March 22');
 
   document.getElementById('app').innerHTML = bannerHtml + html;
 
-  const teamsShown = thu.length + fri.length;
   const aliveCount = allParticipants.filter(n => !elimSet.has(n)).length;
   const elimCount = elimSet.size;
+  const pickedR32 = allParticipants.filter(n => { const p = picksMap[n] || []; return p[0]; }).length;
   document.getElementById('stats').innerHTML = `
     <div>Participants: <span>${allParticipants.length}</span></div>
     <div>Paid: <span>${paidList.size}</span></div>
-    <div>Picked: <span>${allParticipants.filter(n => { const p = picksMap[n] || []; return p[0] || p[1]; }).length}</span></div>
+    <div>R32 Picked: <span>${pickedR32}</span></div>
     <div>Alive: <span style="color:#22c55e;">${aliveCount}</span></div>
     <div>Eliminated: <span style="color:#ef4444;">${elimCount}</span></div>`;
 }
@@ -654,14 +734,14 @@ const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABD
 // Save completed results to localStorage so they survive ESPN API day-rotation
 function saveResults() {
   try {
-    localStorage.setItem('sp_results', JSON.stringify(results));
-    localStorage.setItem('sp_gameScores', JSON.stringify(gameScores));
+    localStorage.setItem('sp_r32_results', JSON.stringify(results));
+    localStorage.setItem('sp_r32_gameScores', JSON.stringify(gameScores));
   } catch(e) {}
 }
 function loadSavedResults() {
   try {
-    const saved = JSON.parse(localStorage.getItem('sp_results') || '{}');
-    const savedScores = JSON.parse(localStorage.getItem('sp_gameScores') || '{}');
+    const saved = JSON.parse(localStorage.getItem('sp_r32_results') || '{}');
+    const savedScores = JSON.parse(localStorage.getItem('sp_r32_gameScores') || '{}');
     // Merge saved data into current objects (saved data fills in gaps, doesn't overwrite seed)
     Object.keys(saved).forEach(k => { if (!results[k]) results[k] = saved[k]; });
     Object.keys(savedScores).forEach(k => {
@@ -672,64 +752,9 @@ function loadSavedResults() {
   } catch(e) {}
 }
 
-// ── RESULTS ───────────────────────────────────────────────────
-// Seed with completed games (updated by live polling)
-const results = {
-  'Nebraska': 'won', 'Troy': 'lost',
-  'TCU': 'won', 'Ohio State': 'lost',
-  'Louisville': 'won', 'South Florida': 'lost',
-  'High Point': 'won', 'Wisconsin': 'lost',
-  'Duke': 'won', 'Siena': 'lost',
-  'Michigan State': 'won', 'N. Dakota St': 'lost',
-  'Arkansas': 'won', "Hawai'i": 'lost',
-  'Vanderbilt': 'won', 'McNeese': 'lost',
-  'VCU': 'won', 'North Carolina': 'lost',
-  'Michigan': 'won', 'Howard': 'lost',
-  'Texas': 'won', 'BYU': 'lost',
-  'Texas A&M': 'won', "Saint Mary's": 'lost',
-  'Illinois': 'won', 'Penn': 'lost',
-  'Saint Louis': 'won', 'Georgia': 'lost',
-  'Gonzaga': 'won', 'Kennesaw St': 'lost',
-  'Houston': 'won', 'Idaho': 'lost',
-};
-
-// ── GAME SCORES ───────────────────────────────────────────────
-// keyed by our team name: { score1, score2, state:'pre'|'in'|'post', clock, period }
-// Seed with completed games (updated by live polling)
-const gameScores = {
-  'Nebraska': { score1:76, score2:47, state:'post', clock:'0:00', period:'2H' },
-  'Troy': { score1:47, score2:76, state:'post', clock:'0:00', period:'2H' },
-  'TCU': { score1:66, score2:64, state:'post', clock:'0:00', period:'2H' },
-  'Ohio State': { score1:64, score2:66, state:'post', clock:'0:00', period:'2H' },
-  'Louisville': { score1:83, score2:79, state:'post', clock:'0:00', period:'2H' },
-  'South Florida': { score1:79, score2:83, state:'post', clock:'0:00', period:'2H' },
-  'High Point': { score1:83, score2:82, state:'post', clock:'0:00', period:'2H' },
-  'Wisconsin': { score1:82, score2:83, state:'post', clock:'0:00', period:'2H' },
-  'Duke': { score1:71, score2:65, state:'post', clock:'0:00', period:'2H' },
-  'Siena': { score1:65, score2:71, state:'post', clock:'0:00', period:'2H' },
-  'Michigan State': { score1:92, score2:67, state:'post', clock:'0:00', period:'2H' },
-  'N. Dakota St': { score1:67, score2:92, state:'post', clock:'0:00', period:'2H' },
-  'Arkansas': { score1:97, score2:78, state:'post', clock:'0:00', period:'2H' },
-  "Hawai'i": { score1:78, score2:97, state:'post', clock:'0:00', period:'2H' },
-  'Vanderbilt': { score1:78, score2:68, state:'post', clock:'0:00', period:'2H' },
-  'McNeese': { score1:68, score2:78, state:'post', clock:'0:00', period:'2H' },
-  'VCU': { score1:82, score2:78, state:'post', clock:'0:00', period:'2H' },
-  'North Carolina': { score1:78, score2:82, state:'post', clock:'0:00', period:'2H' },
-  'Michigan': { score1:101, score2:80, state:'post', clock:'0:00', period:'2H' },
-  'Howard': { score1:80, score2:101, state:'post', clock:'0:00', period:'2H' },
-  'Texas': { score1:79, score2:71, state:'post', clock:'0:00', period:'2H' },
-  'BYU': { score1:71, score2:79, state:'post', clock:'0:00', period:'2H' },
-  'Texas A&M': { score1:63, score2:50, state:'post', clock:'0:00', period:'2H' },
-  "Saint Mary's": { score1:50, score2:63, state:'post', clock:'0:00', period:'2H' },
-  'Illinois': { score1:105, score2:70, state:'post', clock:'0:00', period:'2H' },
-  'Penn': { score1:70, score2:105, state:'post', clock:'0:00', period:'2H' },
-  'Saint Louis': { score1:102, score2:77, state:'post', clock:'0:00', period:'2H' },
-  'Georgia': { score1:77, score2:102, state:'post', clock:'0:00', period:'2H' },
-  'Gonzaga': { score1:73, score2:64, state:'post', clock:'0:00', period:'2H' },
-  'Kennesaw St': { score1:64, score2:73, state:'post', clock:'0:00', period:'2H' },
-  'Houston': { score1:78, score2:47, state:'post', clock:'0:00', period:'2H' },
-  'Idaho': { score1:47, score2:78, state:'post', clock:'0:00', period:'2H' },
-};
+// ── R32 RESULTS & SCORES (live, updated by ESPN polling) ─────
+const results = {};
+const gameScores = {};
 
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(id, btn) {
@@ -744,8 +769,49 @@ function switchTab(id, btn) {
 const TERMINATOR_IMG = 'https://giecdn.blob.core.windows.net/fileuploads/image/2019/10/22/terminator.jpg';
 
 function renderTerminators() {
+  // Build R64 teamPickers (who picked what losing team in R64)
+  const r64TeamPickers = {};
+  Object.entries(r64Picks).forEach(([name, picks]) => {
+    picks.forEach(t => {
+      if (!r64TeamPickers[t]) r64TeamPickers[t] = [];
+      r64TeamPickers[t].push(name);
+    });
+  });
+
   // Collect individual game wins that eliminated pool participants
   const gameWins = [];
+
+  // R64 kills
+  r64Schedule.forEach(g => {
+    if (r64Results[g.team1] === 'won' && typeof g.seed2 === 'number') {
+      const victims = r64TeamPickers[g.team2] || [];
+      if (victims.length > 0) {
+        const s = r64Scores[g.team1];
+        gameWins.push({
+          team: g.team1, seed: g.seed1,
+          loser: g.team2, loserSeed: g.seed2,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Round of 64',
+          victims,
+        });
+      }
+    }
+    if (typeof g.seed2 === 'number' && r64Results[g.team2] === 'won') {
+      const victims = r64TeamPickers[g.team1] || [];
+      if (victims.length > 0) {
+        const s = r64Scores[g.team2];
+        gameWins.push({
+          team: g.team2, seed: g.seed2,
+          loser: g.team1, loserSeed: g.seed1,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Round of 64',
+          victims,
+        });
+      }
+    }
+  });
+
+  // R32 kills
   schedule.forEach(g => {
     if (results[g.team1] === 'won' && typeof g.seed2 === 'number') {
       const victims = teamPickers[g.team2] || [];
@@ -755,7 +821,7 @@ function renderTerminators() {
           team: g.team1, seed: g.seed1,
           loser: g.team2, loserSeed: g.seed2,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Round of 64',
+          kills: victims.length, round: 'Round of 32',
           victims,
         });
       }
@@ -768,7 +834,7 @@ function renderTerminators() {
           team: g.team2, seed: g.seed2,
           loser: g.team1, loserSeed: g.seed1,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Round of 64',
+          kills: victims.length, round: 'Round of 32',
           victims,
         });
       }
@@ -859,20 +925,36 @@ function renderParticipants() {
   });
 
   grid.innerHTML = sorted.map((name, i) => {
-    const [t1, t2] = picksMap[name] || ['', ''];
-    const r1 = results[t1] || null;
-    const r2 = results[t2] || null;
-    const elim = isEliminated(name);
+    // R64 picks from frozen data
+    const [r64t1, r64t2] = r64Picks[name] || ['', ''];
+    const r64r1 = r64Results[r64t1] || null;
+    const r64r2 = r64Results[r64t2] || null;
 
-    // R64 pick states
-    function r64State(team, result) {
+    // R32 pick from current round
+    const [r32t] = picksMap[name] || [''];
+    const r32r = results[r32t] || null;
+
+    const elim = isEliminated(name);
+    const alive = isAliveAfterR64(name);
+
+    function pickState(team, result) {
       if (!team) return 'nopick';
       if (result === 'won') return 'won';
       if (result === 'lost') return 'lost';
-      return 'pending'; // has pick, game not played yet — show logo
+      return 'pending';
     }
 
-    // Future round states: if eliminated, show 'elim'; otherwise 'locked'
+    // R32 circle state
+    let r32State;
+    if (!alive) {
+      r32State = 'elim'; // eliminated in R64
+    } else if (r32t) {
+      r32State = pickState(r32t, r32r);
+    } else {
+      r32State = 'nopick'; // alive but no R32 pick yet
+    }
+
+    // Future round states
     const futureState = elim ? 'elim' : 'locked';
 
     const paid = paidList.has(name);
@@ -881,10 +963,11 @@ function renderParticipants() {
     <div class="participant-card${elim ? ' eliminated' : ''}" style="animation-delay:${i*20}ms">
       <div class="participant-name" ${!paid ? 'style="color:#ef4444;"' : ''}>${name}</div>
       <div class="pick-circles" style="display:flex;align-items:flex-start;gap:4px;flex-wrap:nowrap;justify-content:space-between;">
-        ${makeCircle(t1, r64State(t1, r1), 'R64', true)}
-        ${makeCircle(t2, r64State(t2, r2), 'R64', true)}
+        ${makeCircle(r64t1, pickState(r64t1, r64r1), 'R64', true)}
+        ${makeCircle(r64t2, pickState(r64t2, r64r2), 'R64', true)}
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
-        ${makeCircle('', futureState, 'R32', false)}
+        ${makeCircle(r32t, r32State, 'R32', true)}
+        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle('', futureState, 'S16', false)}
         ${makeCircle('', futureState, 'E8', false)}
         ${makeCircle('', futureState, 'F4', false)}
@@ -902,8 +985,13 @@ function renderParticipants() {
 }
 
 function isEliminated(name) {
-  const [t1, t2] = picksMap[name] || [];
-  return results[t1] === 'lost' || results[t2] === 'lost';
+  // Eliminated if any R64 pick lost
+  const r64 = r64Picks[name] || [];
+  if (r64.some(t => r64Results[t] === 'lost')) return true;
+  // Eliminated if R32 pick lost
+  const r32 = picksMap[name] || [];
+  if (r32.some(t => results[t] === 'lost')) return true;
+  return false;
 }
 
 // circle states: 'won', 'lost', 'pending', 'nopick', 'locked', 'elim'
@@ -1016,7 +1104,7 @@ const espnTeamMap = {
   'Alabama': 'Alabama', 'Tennessee': 'Tennessee', 'Clemson': 'Clemson',
   'UCLA': 'UCLA', 'Purdue': 'Purdue', 'North Carolina': 'North Carolina',
   'Iowa': 'Iowa', 'Missouri': 'Missouri', "St. John's": "St. John's",
-  'Saint John\'s': "St. John's", 'Ohio St': 'Ohio State', 'Ohio State': 'Ohio State',
+  "St John's": "St. John's", 'Saint John\'s': "St. John's", 'Ohio St': 'Ohio State', 'Ohio State': 'Ohio State',
   'Nebraska': 'Nebraska', 'Louisville': 'Louisville', 'South Florida': 'South Florida',
   'BYU': 'BYU', 'Georgia': 'Georgia',
   'Gonzaga': 'Gonzaga', 'Villanova': 'Villanova',
