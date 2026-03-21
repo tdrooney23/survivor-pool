@@ -376,8 +376,8 @@ const CIRCLE_LOGOS = {
   'Michigan State': 'https://a.espncdn.com/i/teamlogos/ncaa/500-dark/127.png',
 };
 
-const schedule = [
-  // THURSDAY
+// ── FROZEN R64 DATA ──────────────────────────────────────────
+const r64Schedule = [
   {day:'THU', time:'12:15 PM', net:'CBS',   seed1:8,  team1:'Ohio State',    seed2:9,   team2:'TCU'},
   {day:'THU', time:'12:40 PM', net:'truTV', seed1:4,  team1:'Nebraska',      seed2:13,  team2:'Troy'},
   {day:'THU', time:'1:30 PM',  net:'TNT',   seed1:6,  team1:'Louisville',    seed2:11,  team2:'South Florida'},
@@ -387,14 +387,13 @@ const schedule = [
   {day:'THU', time:'4:05 PM',  net:'TNT',   seed1:3,  team1:'Michigan State',seed2:14,  team2:'N. Dakota St'},
   {day:'THU', time:'4:25 PM',  net:'TBS',   seed1:4,  team1:'Arkansas',      seed2:13,  team2:"Hawai'i"},
   {day:'THU', time:'6:50 PM',  net:'TNT',   seed1:6,  team1:'North Carolina',seed2:11,  team2:'VCU'},
-  {day:'THU', time:'7:10 PM',  net:'CBS',   seed1:1,  team1:'Michigan',      seed2:16,   team2:'Howard'},
-  {day:'THU', time:'7:25 PM',  net:'TBS',   seed1:6,  team1:'BYU',           seed2:11,   team2:'Texas'},
+  {day:'THU', time:'7:10 PM',  net:'CBS',   seed1:1,  team1:'Michigan',      seed2:16,  team2:'Howard'},
+  {day:'THU', time:'7:25 PM',  net:'TBS',   seed1:6,  team1:'BYU',           seed2:11,  team2:'Texas'},
   {day:'THU', time:'7:35 PM',  net:'truTV', seed1:7,  team1:"Saint Mary's",  seed2:10,  team2:'Texas A&M'},
   {day:'THU', time:'9:25 PM',  net:'TNT',   seed1:3,  team1:'Illinois',      seed2:14,  team2:'Penn'},
   {day:'THU', time:'9:45 PM',  net:'CBS',   seed1:8,  team1:'Georgia',       seed2:9,   team2:'Saint Louis'},
   {day:'THU', time:'10:00 PM', net:'TNT',   seed1:3,  team1:'Gonzaga',       seed2:14,  team2:'Kennesaw St'},
   {day:'THU', time:'10:10 PM', net:'truTV', seed1:2,  team1:'Houston',       seed2:15,  team2:'Idaho'},
-  // FRIDAY
   {day:'FRI', time:'12:15 PM', net:'CBS',   seed1:7,  team1:'Kentucky',      seed2:10,  team2:'Santa Clara'},
   {day:'FRI', time:'12:40 PM', net:'truTV', seed1:5,  team1:'Texas Tech',    seed2:12,  team2:'Akron'},
   {day:'FRI', time:'1:35 PM',  net:'TNT',   seed1:1,  team1:'Arizona',       seed2:16,  team2:'LIU'},
@@ -402,38 +401,158 @@ const schedule = [
   {day:'FRI', time:'2:50 PM',  net:'CBS',   seed1:2,  team1:'Iowa State',    seed2:15,  team2:'Tennessee St'},
   {day:'FRI', time:'3:15 PM',  net:'truTV', seed1:4,  team1:'Alabama',       seed2:13,  team2:'Hofstra'},
   {day:'FRI', time:'4:10 PM',  net:'TNT',   seed1:8,  team1:'Villanova',     seed2:9,   team2:'Utah State'},
-  {day:'FRI', time:'4:25 PM',  net:'TBS',   seed1:6,  team1:'Tennessee',     seed2:11,   team2:'Miami (OH)'},
+  {day:'FRI', time:'4:25 PM',  net:'TBS',   seed1:6,  team1:'Tennessee',     seed2:11,  team2:'Miami (OH)'},
   {day:'FRI', time:'6:50 PM',  net:'TNT',   seed1:8,  team1:'Clemson',       seed2:9,   team2:'Iowa'},
   {day:'FRI', time:'7:10 PM',  net:'CBS',   seed1:5,  team1:"St. John's",    seed2:12,  team2:'UNI'},
   {day:'FRI', time:'7:25 PM',  net:'TBS',   seed1:7,  team1:'UCLA',          seed2:10,  team2:'UCF'},
   {day:'FRI', time:'7:35 PM',  net:'truTV', seed1:2,  team1:'Purdue',        seed2:15,  team2:'Queens'},
-  {day:'FRI', time:'9:25 PM',  net:'TNT',   seed1:1,  team1:'Florida',       seed2:16,   team2:'Prairie View A&M'},
+  {day:'FRI', time:'9:25 PM',  net:'TNT',   seed1:1,  team1:'Florida',       seed2:16,  team2:'Prairie View A&M'},
   {day:'FRI', time:'9:45 PM',  net:'CBS',   seed1:4,  team1:'Kansas',        seed2:13,  team2:'Cal Baptist'},
   {day:'FRI', time:'10:00 PM', net:'TBS',   seed1:2,  team1:'UConn',         seed2:15,  team2:'Furman'},
   {day:'FRI', time:'10:10 PM', net:'truTV', seed1:7,  team1:'Miami',         seed2:10,  team2:'Missouri'},
 ];
 
-// ── PICKS ────────────────────────────────────────────────────
+const r64Picks = {
+  'Brad Bowden': ['Florida', 'Michigan'],
+  'Colin Wilson': ['Michigan State', 'Illinois'],
+  'Dane Swenson': ['Miami', "St. John's"],
+  'Nick Roark': ['Arkansas', 'Texas Tech'],
+  'Sellers': ['Kentucky', 'Vanderbilt'],
+  'Sydney': ['Wisconsin', 'Virginia'],
+};
+
+const r64Results = {
+  // Thursday
+  'Nebraska': 'won', 'Troy': 'lost',
+  'TCU': 'won', 'Ohio State': 'lost',
+  'Louisville': 'won', 'South Florida': 'lost',
+  'High Point': 'won', 'Wisconsin': 'lost',
+  'Duke': 'won', 'Siena': 'lost',
+  'Michigan State': 'won', 'N. Dakota St': 'lost',
+  'Arkansas': 'won', "Hawai'i": 'lost',
+  'Vanderbilt': 'won', 'McNeese': 'lost',
+  'VCU': 'won', 'North Carolina': 'lost',
+  'Michigan': 'won', 'Howard': 'lost',
+  'Texas': 'won', 'BYU': 'lost',
+  'Texas A&M': 'won', "Saint Mary's": 'lost',
+  'Illinois': 'won', 'Penn': 'lost',
+  'Saint Louis': 'won', 'Georgia': 'lost',
+  'Gonzaga': 'won', 'Kennesaw St': 'lost',
+  'Houston': 'won', 'Idaho': 'lost',
+  // Friday
+  'Kentucky': 'won', 'Santa Clara': 'lost',
+  'Texas Tech': 'won', 'Akron': 'lost',
+  'Arizona': 'won', 'LIU': 'lost',
+  'Virginia': 'won', 'Wright State': 'lost',
+  'Iowa State': 'won', 'Tennessee St': 'lost',
+  'Alabama': 'won', 'Hofstra': 'lost',
+  'Utah State': 'won', 'Villanova': 'lost',
+  'Tennessee': 'won', 'Miami (OH)': 'lost',
+  'Iowa': 'won', 'Clemson': 'lost',
+  "St. John's": 'won', 'UNI': 'lost',
+  'UCLA': 'won', 'UCF': 'lost',
+  'Purdue': 'won', 'Queens': 'lost',
+  'Florida': 'won', 'Prairie View A&M': 'lost',
+  'Kansas': 'won', 'Cal Baptist': 'lost',
+  'UConn': 'won', 'Furman': 'lost',
+  'Miami': 'won', 'Missouri': 'lost',
+};
+
+const r64Scores = {
+  // Thursday
+  'Nebraska': { score1:76, score2:47, state:'post', clock:'0:00', period:'2H' },
+  'Troy': { score1:47, score2:76, state:'post', clock:'0:00', period:'2H' },
+  'TCU': { score1:66, score2:64, state:'post', clock:'0:00', period:'2H' },
+  'Ohio State': { score1:64, score2:66, state:'post', clock:'0:00', period:'2H' },
+  'Louisville': { score1:83, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'South Florida': { score1:79, score2:83, state:'post', clock:'0:00', period:'2H' },
+  'High Point': { score1:83, score2:82, state:'post', clock:'0:00', period:'2H' },
+  'Wisconsin': { score1:82, score2:83, state:'post', clock:'0:00', period:'2H' },
+  'Duke': { score1:71, score2:65, state:'post', clock:'0:00', period:'2H' },
+  'Siena': { score1:65, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Michigan State': { score1:92, score2:67, state:'post', clock:'0:00', period:'2H' },
+  'N. Dakota St': { score1:67, score2:92, state:'post', clock:'0:00', period:'2H' },
+  'Arkansas': { score1:97, score2:78, state:'post', clock:'0:00', period:'2H' },
+  "Hawai'i": { score1:78, score2:97, state:'post', clock:'0:00', period:'2H' },
+  'Vanderbilt': { score1:78, score2:68, state:'post', clock:'0:00', period:'2H' },
+  'McNeese': { score1:68, score2:78, state:'post', clock:'0:00', period:'2H' },
+  'VCU': { score1:82, score2:78, state:'post', clock:'0:00', period:'2H' },
+  'North Carolina': { score1:78, score2:82, state:'post', clock:'0:00', period:'2H' },
+  'Michigan': { score1:101, score2:80, state:'post', clock:'0:00', period:'2H' },
+  'Howard': { score1:80, score2:101, state:'post', clock:'0:00', period:'2H' },
+  'Texas': { score1:79, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'BYU': { score1:71, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'Texas A&M': { score1:63, score2:50, state:'post', clock:'0:00', period:'2H' },
+  "Saint Mary's": { score1:50, score2:63, state:'post', clock:'0:00', period:'2H' },
+  'Illinois': { score1:105, score2:70, state:'post', clock:'0:00', period:'2H' },
+  'Penn': { score1:70, score2:105, state:'post', clock:'0:00', period:'2H' },
+  'Saint Louis': { score1:102, score2:77, state:'post', clock:'0:00', period:'2H' },
+  'Georgia': { score1:77, score2:102, state:'post', clock:'0:00', period:'2H' },
+  'Gonzaga': { score1:73, score2:64, state:'post', clock:'0:00', period:'2H' },
+  'Kennesaw St': { score1:64, score2:73, state:'post', clock:'0:00', period:'2H' },
+  'Houston': { score1:78, score2:47, state:'post', clock:'0:00', period:'2H' },
+  'Idaho': { score1:47, score2:78, state:'post', clock:'0:00', period:'2H' },
+  // Friday
+  'Kentucky': { score1:89, score2:84, state:'post', clock:'0:00', period:'2H' },
+  'Santa Clara': { score1:84, score2:89, state:'post', clock:'0:00', period:'2H' },
+  'Texas Tech': { score1:91, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Akron': { score1:71, score2:91, state:'post', clock:'0:00', period:'2H' },
+  'Arizona': { score1:92, score2:58, state:'post', clock:'0:00', period:'2H' },
+  'LIU': { score1:58, score2:92, state:'post', clock:'0:00', period:'2H' },
+  'Virginia': { score1:82, score2:73, state:'post', clock:'0:00', period:'2H' },
+  'Wright State': { score1:73, score2:82, state:'post', clock:'0:00', period:'2H' },
+  'Iowa State': { score1:108, score2:74, state:'post', clock:'0:00', period:'2H' },
+  'Tennessee St': { score1:74, score2:108, state:'post', clock:'0:00', period:'2H' },
+  'Alabama': { score1:90, score2:70, state:'post', clock:'0:00', period:'2H' },
+  'Hofstra': { score1:70, score2:90, state:'post', clock:'0:00', period:'2H' },
+  'Utah State': { score1:86, score2:76, state:'post', clock:'0:00', period:'2H' },
+  'Villanova': { score1:76, score2:86, state:'post', clock:'0:00', period:'2H' },
+  'Tennessee': { score1:78, score2:56, state:'post', clock:'0:00', period:'2H' },
+  'Miami (OH)': { score1:56, score2:78, state:'post', clock:'0:00', period:'2H' },
+  'Iowa': { score1:67, score2:61, state:'post', clock:'0:00', period:'2H' },
+  'Clemson': { score1:61, score2:67, state:'post', clock:'0:00', period:'2H' },
+  "St. John's": { score1:79, score2:53, state:'post', clock:'0:00', period:'2H' },
+  'UNI': { score1:53, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'UCLA': { score1:75, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'UCF': { score1:71, score2:75, state:'post', clock:'0:00', period:'2H' },
+  'Purdue': { score1:104, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Queens': { score1:71, score2:104, state:'post', clock:'0:00', period:'2H' },
+  'Florida': { score1:114, score2:55, state:'post', clock:'0:00', period:'2H' },
+  'Prairie View A&M': { score1:55, score2:114, state:'post', clock:'0:00', period:'2H' },
+  'Kansas': { score1:68, score2:60, state:'post', clock:'0:00', period:'2H' },
+  'Cal Baptist': { score1:60, score2:68, state:'post', clock:'0:00', period:'2H' },
+  'UConn': { score1:82, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Furman': { score1:71, score2:82, state:'post', clock:'0:00', period:'2H' },
+  'Miami': { score1:80, score2:66, state:'post', clock:'0:00', period:'2H' },
+  'Missouri': { score1:66, score2:80, state:'post', clock:'0:00', period:'2H' },
+};
+
+// ── R32 SCHEDULE ─────────────────────────────────────────────
+const schedule = [
+  // SATURDAY
+  {day:'SAT', time:'12:10 PM', net:'CBS',   seed1:1,  team1:'Michigan',      seed2:9,  team2:'Saint Louis'},
+  {day:'SAT', time:'2:45 PM',  net:'CBS',   seed1:3,  team1:'Michigan State', seed2:6,  team2:'Louisville'},
+  {day:'SAT', time:'5:15 PM',  net:'CBS',   seed1:1,  team1:'Duke',          seed2:9,  team2:'TCU'},
+  {day:'SAT', time:'6:10 PM',  net:'TNT',   seed1:2,  team1:'Houston',       seed2:10, team2:'Texas A&M'},
+  {day:'SAT', time:'7:10 PM',  net:'truTV', seed1:3,  team1:'Gonzaga',       seed2:11, team2:'Texas'},
+  {day:'SAT', time:'7:50 PM',  net:'CBS',   seed1:3,  team1:'Illinois',      seed2:11, team2:'VCU'},
+  {day:'SAT', time:'8:45 PM',  net:'TNT',   seed1:4,  team1:'Nebraska',      seed2:5,  team2:'Vanderbilt'},
+  {day:'SAT', time:'9:45 PM',  net:'truTV', seed1:4,  team1:'Arkansas',      seed2:12, team2:'High Point'},
+  // SUNDAY
+  {day:'SUN', time:'12:10 PM', net:'CBS',   seed1:2,  team1:'Purdue',        seed2:7,  team2:'Miami'},
+  {day:'SUN', time:'2:45 PM',  net:'CBS',   seed1:2,  team1:'Iowa State',    seed2:7,  team2:'Kentucky'},
+  {day:'SUN', time:'5:15 PM',  net:'CBS',   seed1:4,  team1:'Kansas',        seed2:5,  team2:"St. John's"},
+  {day:'SUN', time:'6:10 PM',  net:'TNT',   seed1:3,  team1:'Virginia',      seed2:6,  team2:'Tennessee'},
+  {day:'SUN', time:'7:10 PM',  net:'TBS',   seed1:1,  team1:'Florida',       seed2:9,  team2:'Iowa'},
+  {day:'SUN', time:'7:50 PM',  net:'truTV', seed1:1,  team1:'Arizona',       seed2:9,  team2:'Utah State'},
+  {day:'SUN', time:'8:45 PM',  net:'TNT',   seed1:2,  team1:'UConn',         seed2:7,  team2:'UCLA'},
+  {day:'SUN', time:'9:45 PM',  net:'TBS',   seed1:4,  team1:'Alabama',       seed2:5,  team2:'Texas Tech'},
+];
+
+// ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
-  ['Brad Bowden','Florida','Michigan'],
-  ['Colin Wilson','Michigan State','Illinois'],
-  ['Dane Swenson','Miami',"St. John's"],
-  ['Nick Roark','Arkansas','Texas Tech'],
-  ['Sellers','Kentucky','Vanderbilt'],
-  ['Sydney','Wisconsin','Virginia'],
+  // ['Name', 'R32Team'] — populated from Google Sheet
 ];
-
-const randomPool = [
-  'Duke','Michigan','Florida','Kansas','Arizona','Iowa State',
-  'Houston','UConn','Illinois','Kentucky','Alabama','Tennessee',
-  'Arkansas','Wisconsin','Texas Tech','Virginia','Clemson','UCLA',
-  'Purdue','North Carolina'
-];
-
-function seededRand(seed) {
-  let s = seed;
-  return () => { s = (s*9301+49297)%233280; return s/233280; };
-}
 
 // ── SHEET CONFIG ─────────────────────────────────────────────
 // Paste your Apps Script Web App URL here after deploying
@@ -466,21 +585,26 @@ function normalizeTeam(t) {
       || t;
 }
 
-function buildFromData(participants, picks, paid) {
-  // Rebuild allParticipants
+function isAliveAfterR64(name) {
+  const picks = r64Picks[name];
+  if (!picks) return false;
+  return picks.every(t => r64Results[t] === 'won');
+}
+
+function buildFromData(participants, r32picks, paid) {
   allParticipants = participants;
 
-  // Build picksMap from sheet data, normalizing team names
+  // Build picksMap from R32 picks (1 pick per participant)
   picksMap = {};
-  picks.forEach(([n, t1, t2]) => {
-    if (n) picksMap[n] = [normalizeTeam(t1), normalizeTeam(t2)];
+  r32picks.forEach(([n, t]) => {
+    if (n && t) picksMap[n] = [normalizeTeam(t)];
   });
 
   // Rebuild paidList from sheet
   paidList.clear();
   paid.forEach(name => { if (name) paidList.add(name); });
 
-  // Rebuild teamPickers
+  // Rebuild teamPickers from R32 picks
   teamPickers = {};
   allParticipants.forEach(name => {
     (picksMap[name] || []).forEach(t => {
