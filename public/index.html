@@ -1285,6 +1285,12 @@ function copyHandle() {
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
+// One-time cache bust: R64 scores leaked into R32 localStorage
+if (!localStorage.getItem('sp_r32_v2')) {
+  localStorage.removeItem('sp_r32_results');
+  localStorage.removeItem('sp_r32_gameScores');
+  localStorage.setItem('sp_r32_v2', '1');
+}
 loadSavedResults();
 render();
 renderParticipants();
