@@ -786,11 +786,14 @@ function saveResults() {
 }
 function loadSavedResults() {
   try {
+    // Only load results for teams in our R32 schedule
+    const r32Teams = new Set();
+    schedule.forEach(g => { r32Teams.add(g.team1); r32Teams.add(g.team2); });
     const saved = JSON.parse(localStorage.getItem('sp_r32_results') || '{}');
     const savedScores = JSON.parse(localStorage.getItem('sp_r32_gameScores') || '{}');
-    // Merge saved data into current objects (saved data fills in gaps, doesn't overwrite seed)
-    Object.keys(saved).forEach(k => { if (!results[k]) results[k] = saved[k]; });
+    Object.keys(saved).forEach(k => { if (r32Teams.has(k) && !results[k]) results[k] = saved[k]; });
     Object.keys(savedScores).forEach(k => {
+      if (!r32Teams.has(k)) return;
       if (!gameScores[k] || gameScores[k].state !== 'post') {
         if (savedScores[k]?.state === 'post') gameScores[k] = savedScores[k];
       }
@@ -1211,9 +1214,12 @@ async function fetchScores(manual = false) {
         };
       });
 
-      // Update scores for each mapped team
+      // Only process teams in our R32 schedule
+      const r32Teams = new Set();
+      schedule.forEach(g => { r32Teams.add(g.team1); r32Teams.add(g.team2); });
+
       mapped.forEach((m, i) => {
-        if (!m.name) return;
+        if (!m.name || !r32Teams.has(m.name)) return;
         const oppScore = mapped[1 - i]?.score || 0;
         const prev = JSON.stringify(gameScores[m.name]);
         gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
