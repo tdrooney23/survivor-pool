@@ -549,6 +549,23 @@ const schedule = [
   {day:'SUN', time:'9:45 PM',  net:'TBS',   seed1:4,  team1:'Alabama',       seed2:5,  team2:'Texas Tech'},
 ];
 
+// ── S16 SCHEDULE (data ready, no tab yet) ────────────────────
+const s16Schedule = [
+  // THURSDAY — West & South regions
+  {day:'THU', time:'7:10 PM', net:'CBS',  seed1:2,  team1:'Purdue',        seed2:11, team2:'Texas'},
+  {day:'THU', time:'7:30 PM', net:'TBS',  seed1:4,  team1:'Nebraska',      seed2:9,  team2:'Iowa'},
+  {day:'THU', time:'9:45 PM', net:'CBS',  seed1:1,  team1:'Arizona',       seed2:4,  team2:'Arkansas'},
+  {day:'THU', time:'10:05 PM',net:'TBS',  seed1:2,  team1:'Houston',       seed2:3,  team2:'Illinois'},
+  // FRIDAY — East & Midwest regions
+  {day:'FRI', time:'7:10 PM', net:'CBS',  seed1:1,  team1:'Duke',          seed2:5,  team2:"St. John's"},
+  {day:'FRI', time:'7:35 PM', net:'TBS',  seed1:1,  team1:'Michigan',      seed2:4,  team2:'Alabama'},
+  {day:'FRI', time:'9:45 PM', net:'CBS',  seed1:2,  team1:'UConn',         seed2:3,  team2:'Michigan State'},
+  {day:'FRI', time:'10:10 PM',net:'TBS',  seed1:2,  team1:'Iowa State',    seed2:6,  team2:'Tennessee'},
+];
+
+// ── S16 CONFIG ───────────────────────────────────────────────
+const S16_PICKS_REVEALED = false; // flip to true to show logos instead of locks
+
 // ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
   // ['Name', 'R32Team'] — populated from Google Sheet
@@ -559,6 +576,7 @@ const rawPicks = [
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyCWf_BboL_TY9GJ2KR8M5jPX73LfSdiryH6l8hS3F7GoVM7x53ALBLfeJ40VtDfQ5o/exec';
 
 let picksMap = {};
+let s16PicksMap = {};
 let allParticipants = [];
 let teamPickers = {};
 
@@ -591,13 +609,19 @@ function isAliveAfterR64(name) {
   return picks.every(t => r64Results[t] === 'won');
 }
 
-function buildFromData(participants, r32picks, paid) {
+function buildFromData(participants, r32picks, s16picks, paid) {
   allParticipants = participants;
 
   // Build picksMap from R32 picks (1 pick per participant)
   picksMap = {};
   r32picks.forEach(([n, t]) => {
     if (n && t) picksMap[n] = [normalizeTeam(t)];
+  });
+
+  // Build s16PicksMap from S16 picks (1 pick per participant)
+  s16PicksMap = {};
+  (s16picks || []).forEach(([n, t]) => {
+    if (n && t) s16PicksMap[n] = [normalizeTeam(t)];
   });
 
   // Rebuild paidList from sheet
@@ -616,7 +640,7 @@ function buildFromData(participants, r32picks, paid) {
 
 async function fetchSheetData() {
   if (!SHEET_URL) {
-    buildFromData(allParticipants, rawPicks, []);
+    buildFromData(allParticipants, rawPicks, [], []);
     return;
   }
   try {
@@ -628,13 +652,13 @@ async function fetchSheetData() {
         if (n && !r64Picks[n]) r64Picks[n] = [normalizeTeam(t1), normalizeTeam(t2)];
       });
     }
-    buildFromData(data.participants, data.r32picks || [], data.paid);
+    buildFromData(data.participants, data.r32picks || [], data.s16picks || [], data.paid);
     render();
     renderParticipants();
     renderTerminators();
   } catch(err) {
     console.warn('Sheet fetch error, using hardcoded data:', err);
-    buildFromData(allParticipants, rawPicks, []);
+    buildFromData(allParticipants, rawPicks, [], []);
   }
   document.getElementById('loader').style.display = 'none';
   document.getElementById('main-content').style.display = 'block';
@@ -801,9 +825,63 @@ function loadSavedResults() {
   } catch(e) {}
 }
 
-// ── R32 RESULTS & SCORES (live, updated by ESPN polling) ─────
-const results = {};
-const gameScores = {};
+// ── R32 RESULTS & SCORES (frozen) ────────────────────────────
+const results = {
+  // Saturday
+  'Michigan': 'won', 'Saint Louis': 'lost',
+  'Michigan State': 'won', 'Louisville': 'lost',
+  'Duke': 'won', 'TCU': 'lost',
+  'Houston': 'won', 'Texas A&M': 'lost',
+  'Texas': 'won', 'Gonzaga': 'lost',
+  'Illinois': 'won', 'VCU': 'lost',
+  'Nebraska': 'won', 'Vanderbilt': 'lost',
+  'Arkansas': 'won', 'High Point': 'lost',
+  // Sunday
+  'Purdue': 'won', 'Miami': 'lost',
+  'Iowa State': 'won', 'Kentucky': 'lost',
+  "St. John's": 'won', 'Kansas': 'lost',
+  'Tennessee': 'won', 'Virginia': 'lost',
+  'Iowa': 'won', 'Florida': 'lost',
+  'Arizona': 'won', 'Utah State': 'lost',
+  'UConn': 'won', 'UCLA': 'lost',
+  'Alabama': 'won', 'Texas Tech': 'lost',
+};
+const gameScores = {
+  // Saturday
+  'Michigan': { score1:95, score2:72, state:'post', clock:'0:00', period:'2H' },
+  'Saint Louis': { score1:72, score2:95, state:'post', clock:'0:00', period:'2H' },
+  'Michigan State': { score1:77, score2:69, state:'post', clock:'0:00', period:'2H' },
+  'Louisville': { score1:69, score2:77, state:'post', clock:'0:00', period:'2H' },
+  'Duke': { score1:81, score2:58, state:'post', clock:'0:00', period:'2H' },
+  'TCU': { score1:58, score2:81, state:'post', clock:'0:00', period:'2H' },
+  'Houston': { score1:88, score2:57, state:'post', clock:'0:00', period:'2H' },
+  'Texas A&M': { score1:57, score2:88, state:'post', clock:'0:00', period:'2H' },
+  'Texas': { score1:74, score2:68, state:'post', clock:'0:00', period:'2H' },
+  'Gonzaga': { score1:68, score2:74, state:'post', clock:'0:00', period:'2H' },
+  'Illinois': { score1:76, score2:55, state:'post', clock:'0:00', period:'2H' },
+  'VCU': { score1:55, score2:76, state:'post', clock:'0:00', period:'2H' },
+  'Nebraska': { score1:74, score2:72, state:'post', clock:'0:00', period:'2H' },
+  'Vanderbilt': { score1:72, score2:74, state:'post', clock:'0:00', period:'2H' },
+  'Arkansas': { score1:94, score2:88, state:'post', clock:'0:00', period:'2H' },
+  'High Point': { score1:88, score2:94, state:'post', clock:'0:00', period:'2H' },
+  // Sunday
+  'Purdue': { score1:79, score2:69, state:'post', clock:'0:00', period:'2H' },
+  'Miami': { score1:69, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'Iowa State': { score1:82, score2:63, state:'post', clock:'0:00', period:'2H' },
+  'Kentucky': { score1:63, score2:82, state:'post', clock:'0:00', period:'2H' },
+  "St. John's": { score1:67, score2:65, state:'post', clock:'0:00', period:'2H' },
+  'Kansas': { score1:65, score2:67, state:'post', clock:'0:00', period:'2H' },
+  'Tennessee': { score1:79, score2:72, state:'post', clock:'0:00', period:'2H' },
+  'Virginia': { score1:72, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'Iowa': { score1:73, score2:72, state:'post', clock:'0:00', period:'2H' },
+  'Florida': { score1:72, score2:73, state:'post', clock:'0:00', period:'2H' },
+  'Arizona': { score1:78, score2:66, state:'post', clock:'0:00', period:'2H' },
+  'Utah State': { score1:66, score2:78, state:'post', clock:'0:00', period:'2H' },
+  'UConn': { score1:73, score2:57, state:'post', clock:'0:00', period:'2H' },
+  'UCLA': { score1:57, score2:73, state:'post', clock:'0:00', period:'2H' },
+  'Alabama': { score1:90, score2:65, state:'post', clock:'0:00', period:'2H' },
+  'Texas Tech': { score1:65, score2:90, state:'post', clock:'0:00', period:'2H' },
+};
 
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(id, btn) {
@@ -993,6 +1071,19 @@ function renderParticipants() {
     else if (r32t) r32State = pickState(r32t, r32r);
     else r32State = 'nopick';
 
+    // S16 pick state
+    const [s16t] = s16PicksMap[name] || [''];
+    let s16State;
+    if (elim) {
+      s16State = 'elim';
+    } else if (s16t && !S16_PICKS_REVEALED) {
+      s16State = 's16-locked';
+    } else if (s16t && S16_PICKS_REVEALED) {
+      s16State = 'pending'; // will become won/lost once games start
+    } else {
+      s16State = 'locked';
+    }
+
     const futureState = elim ? 'elim' : 'locked';
 
     const paid = paidList.has(name);
@@ -1006,7 +1097,7 @@ function renderParticipants() {
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle(r32t, r32State, 'R32', true)}
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
-        ${makeCircle('', futureState, 'S16', false)}
+        ${makeCircle(s16t, s16State, 'S16', S16_PICKS_REVEALED)}
         ${makeCircle('', futureState, 'E8', false)}
         ${makeCircle('', futureState, 'F4', false)}
         ${makeCircle('', futureState, 'CHMP', false)}
@@ -1064,6 +1155,11 @@ function makeCircle(team, state, label, showLogo) {
     border = '2px dashed #2a3a5a';
     bg = 'transparent';
     inner = `<div style="font-size:8px;font-weight:700;color:#2a4a6a;text-align:center;line-height:1.2;">NO<br>PICK</div>`;
+  } else if (state === 's16-locked') {
+    // Has pick but not yet revealed — lock icon
+    border = '2px solid #3b82f6';
+    bg = 'rgba(59,130,246,0.08)';
+    inner = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
   } else {
     // locked - not open yet
     border = '1px solid #151f35';
@@ -1073,7 +1169,7 @@ function makeCircle(team, state, label, showLogo) {
 
   const labelColor = state === 'won' ? '#22c55e'
     : (state === 'lost' || state === 'elim') ? '#ef4444'
-    : state === 'pending' ? '#3b82f6'
+    : (state === 'pending' || state === 's16-locked') ? '#3b82f6'
     : state === 'nopick' ? '#2a4a6a'
     : '#1e2d45';
 
