@@ -1094,10 +1094,10 @@ function renderParticipants() {
       <div class="pick-circles" style="display:flex;align-items:flex-start;gap:4px;flex-wrap:nowrap;justify-content:space-between;">
         ${makeCircle(r64t1, pickState(r64t1, r64r1), 'R64', true)}
         ${makeCircle(r64t2, pickState(r64t2, r64r2), 'R64', true)}
-        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle(r32t, r32State, 'R32', true)}
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle(s16t, s16State, 'S16', S16_PICKS_REVEALED)}
+        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle('', futureState, 'E8', false)}
         ${makeCircle('', futureState, 'F4', false)}
         ${makeCircle('', futureState, 'CHMP', false)}
