@@ -789,11 +789,11 @@ function render() {
 
   const aliveCount = allParticipants.filter(n => !elimSet.has(n)).length;
   const elimCount = elimSet.size;
-  const pickedR32 = allParticipants.filter(n => { const p = picksMap[n] || []; return p[0]; }).length;
+  const pickedS16 = allParticipants.filter(n => !isEliminated(n) && (s16PicksMap[n] || [])[0]).length;
   document.getElementById('stats').innerHTML = `
     <div>Participants: <span>${allParticipants.length}</span></div>
     <div>Paid: <span>${paidList.size}</span></div>
-    <div>R32 Picked: <span>${pickedR32}</span></div>
+    <div>S16 Picked: <span>${pickedS16}</span></div>
     <div>Alive: <span style="color:#22c55e;">${aliveCount}</span></div>
     <div>Eliminated: <span style="color:#ef4444;">${elimCount}</span></div>`;
 }
@@ -1081,7 +1081,7 @@ function renderParticipants() {
     } else if (s16t && S16_PICKS_REVEALED) {
       s16State = 'pending'; // will become won/lost once games start
     } else {
-      s16State = 'locked';
+      s16State = 'nopick'; // active round — waiting for pick
     }
 
     const futureState = elim ? 'elim' : 'locked';
