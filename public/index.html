@@ -334,7 +334,7 @@
 <body>
 <header>
   <img class="mm-logo" id="mmlogo" alt="March Madness">
-  <div class="pool-title">2026 Survivor Pool &mdash; Round of 32</div>
+  <div class="pool-title">2026 Survivor Pool &mdash; Sweet 16</div>
 </header>
 <div id="loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;">
   <div style="font-size:48px;animation:bounce 0.6s ease infinite alternate;">🏀</div>
@@ -348,7 +348,7 @@
   <button class="refresh-btn" onclick="fetchScores(true)">↻ Refresh</button>
 </div>
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('games',this)">Round of 32</button>
+  <button class="tab-btn active" onclick="switchTab('games',this)">Sweet 16</button>
   <button class="tab-btn" onclick="switchTab('participants',this)">Participants</button>
   <button class="tab-btn" onclick="switchTab('terminators',this)">Top Terminators</button>
 </div>
@@ -527,8 +527,8 @@ const r64Scores = {
   'Missouri': { score1:66, score2:80, state:'post', clock:'0:00', period:'2H' },
 };
 
-// ── R32 SCHEDULE ─────────────────────────────────────────────
-const schedule = [
+// ── R32 SCHEDULE (frozen) ────────────────────────────────────
+const r32Schedule = [
   // SATURDAY
   {day:'SAT', time:'12:10 PM', net:'CBS',   seed1:1,  team1:'Michigan',      seed2:9,  team2:'Saint Louis'},
   {day:'SAT', time:'2:45 PM',  net:'CBS',   seed1:3,  team1:'Michigan State', seed2:6,  team2:'Louisville'},
@@ -549,8 +549,8 @@ const schedule = [
   {day:'SUN', time:'9:45 PM',  net:'TBS',   seed1:4,  team1:'Alabama',       seed2:5,  team2:'Texas Tech'},
 ];
 
-// ── S16 SCHEDULE (data ready, no tab yet) ────────────────────
-const s16Schedule = [
+// ── S16 SCHEDULE (active round) ──────────────────────────────
+const schedule = [
   // THURSDAY — West & South regions
   {day:'THU', time:'7:10 PM', net:'CBS',  seed1:2,  team1:'Purdue',        seed2:11, team2:'Texas'},
   {day:'THU', time:'7:30 PM', net:'TBS',  seed1:4,  team1:'Nebraska',      seed2:9,  team2:'Iowa'},
@@ -564,7 +564,7 @@ const s16Schedule = [
 ];
 
 // ── S16 CONFIG ───────────────────────────────────────────────
-const S16_PICKS_REVEALED = false; // flip to true to show logos instead of locks
+const S16_PICKS_REVEALED = true; // flip to true to show logos instead of locks
 
 // ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
@@ -579,6 +579,7 @@ let picksMap = {};
 let s16PicksMap = {};
 let allParticipants = [];
 let teamPickers = {};
+let r32TeamPickers = {};
 
 // ── PAID LIST (update daily) ──────────────────────────────────
 const paidList = new Set([
@@ -628,12 +629,21 @@ function buildFromData(participants, r32picks, s16picks, paid) {
   paidList.clear();
   paid.forEach(name => { if (name) paidList.add(name); });
 
-  // Rebuild teamPickers from R32 picks
+  // Rebuild teamPickers from S16 picks (active round)
   teamPickers = {};
   allParticipants.forEach(name => {
-    (picksMap[name] || []).forEach(t => {
+    (s16PicksMap[name] || []).forEach(t => {
       if (!teamPickers[t]) teamPickers[t] = [];
       teamPickers[t].push(name);
+    });
+  });
+
+  // Also build r32TeamPickers for terminators
+  r32TeamPickers = {};
+  allParticipants.forEach(name => {
+    (picksMap[name] || []).forEach(t => {
+      if (!r32TeamPickers[t]) r32TeamPickers[t] = [];
+      r32TeamPickers[t].push(name);
     });
   });
 }
@@ -695,13 +705,13 @@ function render() {
     return cards;
   }
 
-  // Build set of participants who have any loss (R64 or R32)
+  // Build set of participants who have any loss (R64, R32, or S16)
   const elimSet = new Set();
   const wonSet = new Set();
   allParticipants.forEach(name => {
     if (isEliminated(name)) { elimSet.add(name); return; }
-    const [r32t] = picksMap[name] || [];
-    if (r32t && results[r32t] === 'won') wonSet.add(name);
+    const [s16t] = s16PicksMap[name] || [];
+    if (s16t && results[s16t] === 'won') wonSet.add(name);
   });
 
   function chipClass(name) {
@@ -710,8 +720,8 @@ function render() {
     return 'picker-chip';
   }
 
-  const sat = buildCards('SAT');
-  const sun = buildCards('SUN');
+  const thu = buildCards('THU');
+  const fri = buildCards('FRI');
 
   // Sort: completed games to the end
   function sortCards(cards) {
@@ -721,8 +731,8 @@ function render() {
       return aDone - bDone;
     });
   }
-  sortCards(sat);
-  sortCards(sun);
+  sortCards(thu);
+  sortCards(fri);
 
   let html = '';
   let idx = 0;
@@ -762,10 +772,10 @@ function render() {
     html += '</div>';
   }
 
-  // Not picked yet banner — alive participants without an R32 pick
+  // Not picked yet banner — alive participants without an S16 pick
   const notPicked = allParticipants.filter(n => {
-    if (!isAliveAfterR64(n)) return false;
-    const [t] = picksMap[n] || [];
+    if (isEliminated(n)) return false;
+    const [t] = s16PicksMap[n] || [];
     return !t;
   });
   let bannerHtml = '';
@@ -775,15 +785,15 @@ function render() {
     <div style="max-width:1400px;margin:0 auto;padding:0 20px 16px;">
       <div style="background:#0f1f3d;border:1px solid rgba(239,180,0,0.25);border-radius:8px;padding:12px 16px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f0b400;margin-bottom:8px;">
-          R32 Picks Not Yet Submitted (${notPicked.length})
+          S16 Picks Not Yet Submitted (${notPicked.length})
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
       </div>
     </div>`;
   }
 
-  renderGroup(sun, 'Sunday, March 22');
-  renderGroup(sat, 'Saturday, March 21');
+  renderGroup(thu, 'Thursday, March 26');
+  renderGroup(fri, 'Friday, March 27');
 
   document.getElementById('app').innerHTML = bannerHtml + html;
 
@@ -804,20 +814,20 @@ const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABD
 // Save completed results to localStorage so they survive ESPN API day-rotation
 function saveResults() {
   try {
-    localStorage.setItem('sp_r32_results', JSON.stringify(results));
-    localStorage.setItem('sp_r32_gameScores', JSON.stringify(gameScores));
+    localStorage.setItem('sp_s16_results', JSON.stringify(results));
+    localStorage.setItem('sp_s16_gameScores', JSON.stringify(gameScores));
   } catch(e) {}
 }
 function loadSavedResults() {
   try {
-    // Only load results for teams in our R32 schedule
-    const r32Teams = new Set();
-    schedule.forEach(g => { r32Teams.add(g.team1); r32Teams.add(g.team2); });
-    const saved = JSON.parse(localStorage.getItem('sp_r32_results') || '{}');
-    const savedScores = JSON.parse(localStorage.getItem('sp_r32_gameScores') || '{}');
-    Object.keys(saved).forEach(k => { if (r32Teams.has(k) && !results[k]) results[k] = saved[k]; });
+    // Only load results for teams in our S16 schedule
+    const s16Teams = new Set();
+    schedule.forEach(g => { s16Teams.add(g.team1); s16Teams.add(g.team2); });
+    const saved = JSON.parse(localStorage.getItem('sp_s16_results') || '{}');
+    const savedScores = JSON.parse(localStorage.getItem('sp_s16_gameScores') || '{}');
+    Object.keys(saved).forEach(k => { if (s16Teams.has(k) && !results[k]) results[k] = saved[k]; });
     Object.keys(savedScores).forEach(k => {
-      if (!r32Teams.has(k)) return;
+      if (!s16Teams.has(k)) return;
       if (!gameScores[k] || gameScores[k].state !== 'post') {
         if (savedScores[k]?.state === 'post') gameScores[k] = savedScores[k];
       }
@@ -826,7 +836,7 @@ function loadSavedResults() {
 }
 
 // ── R32 RESULTS & SCORES (frozen) ────────────────────────────
-const results = {
+const r32Results = {
   // Saturday
   'Michigan': 'won', 'Saint Louis': 'lost',
   'Michigan State': 'won', 'Louisville': 'lost',
@@ -846,7 +856,7 @@ const results = {
   'UConn': 'won', 'UCLA': 'lost',
   'Alabama': 'won', 'Texas Tech': 'lost',
 };
-const gameScores = {
+const r32Scores = {
   // Saturday
   'Michigan': { score1:95, score2:72, state:'post', clock:'0:00', period:'2H' },
   'Saint Louis': { score1:72, score2:95, state:'post', clock:'0:00', period:'2H' },
@@ -882,6 +892,10 @@ const gameScores = {
   'Alabama': { score1:90, score2:65, state:'post', clock:'0:00', period:'2H' },
   'Texas Tech': { score1:65, score2:90, state:'post', clock:'0:00', period:'2H' },
 };
+
+// ── S16 RESULTS & SCORES (live) ─────────────────────────────
+const results = {};
+const gameScores = {};
 
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(id, btn) {
@@ -938,6 +952,36 @@ function renderTerminators() {
   });
 
   // R32 kills
+  r32Schedule.forEach(g => {
+    if (r32Results[g.team1] === 'won' && typeof g.seed2 === 'number') {
+      const victims = r32TeamPickers[g.team2] || [];
+      if (victims.length > 0) {
+        const s = r32Scores[g.team1];
+        gameWins.push({
+          team: g.team1, seed: g.seed1,
+          loser: g.team2, loserSeed: g.seed2,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Round of 32',
+          victims,
+        });
+      }
+    }
+    if (typeof g.seed2 === 'number' && r32Results[g.team2] === 'won') {
+      const victims = r32TeamPickers[g.team1] || [];
+      if (victims.length > 0) {
+        const s = r32Scores[g.team2];
+        gameWins.push({
+          team: g.team2, seed: g.seed2,
+          loser: g.team1, loserSeed: g.seed1,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Round of 32',
+          victims,
+        });
+      }
+    }
+  });
+
+  // S16 kills
   schedule.forEach(g => {
     if (results[g.team1] === 'won' && typeof g.seed2 === 'number') {
       const victims = teamPickers[g.team2] || [];
@@ -947,7 +991,7 @@ function renderTerminators() {
           team: g.team1, seed: g.seed1,
           loser: g.team2, loserSeed: g.seed2,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Round of 32',
+          kills: victims.length, round: 'Sweet 16',
           victims,
         });
       }
@@ -960,7 +1004,7 @@ function renderTerminators() {
           team: g.team2, seed: g.seed2,
           loser: g.team1, loserSeed: g.seed1,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Round of 32',
+          kills: victims.length, round: 'Sweet 16',
           victims,
         });
       }
@@ -1055,7 +1099,7 @@ function renderParticipants() {
     const r64r1 = r64Results[r64t1] || null;
     const r64r2 = r64Results[r64t2] || null;
     const [r32t] = picksMap[name] || [''];
-    const r32r = results[r32t] || null;
+    const r32r = r32Results[r32t] || null;
     const elim = isEliminated(name);
     const alive = isAliveAfterR64(name);
 
@@ -1073,13 +1117,14 @@ function renderParticipants() {
 
     // S16 pick state
     const [s16t] = s16PicksMap[name] || [''];
+    const s16r = results[s16t] || null;
     let s16State;
     if (elim) {
       s16State = 'elim';
     } else if (s16t && !S16_PICKS_REVEALED) {
       s16State = 's16-locked';
     } else if (s16t && S16_PICKS_REVEALED) {
-      s16State = 'pending'; // will become won/lost once games start
+      s16State = pickState(s16t, s16r); // live won/lost/pending
     } else {
       s16State = 'nopick'; // active round — waiting for pick
     }
@@ -1095,10 +1140,10 @@ function renderParticipants() {
         ${makeCircle(r64t1, pickState(r64t1, r64r1), 'R64', true)}
         ${makeCircle(r64t2, pickState(r64t2, r64r2), 'R64', true)}
         ${makeCircle(r32t, r32State, 'R32', true)}
-        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle(s16t, s16State, 'S16', S16_PICKS_REVEALED)}
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle('', futureState, 'E8', false)}
+        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle('', futureState, 'F4', false)}
         ${makeCircle('', futureState, 'CHMP', false)}
       </div>
@@ -1117,7 +1162,9 @@ function isEliminated(name) {
   const r64 = r64Picks[name] || [];
   if (r64.some(t => r64Results[t] === 'lost')) return true;
   const r32 = picksMap[name] || [];
-  if (r32.some(t => results[t] === 'lost')) return true;
+  if (r32.some(t => r32Results[t] === 'lost')) return true;
+  const s16 = s16PicksMap[name] || [];
+  if (s16.some(t => results[t] === 'lost')) return true;
   return false;
 }
 
@@ -1310,12 +1357,12 @@ async function fetchScores(manual = false) {
         };
       });
 
-      // Only process teams in our R32 schedule
-      const r32Teams = new Set();
-      schedule.forEach(g => { r32Teams.add(g.team1); r32Teams.add(g.team2); });
+      // Only process teams in our S16 schedule
+      const s16Teams = new Set();
+      schedule.forEach(g => { s16Teams.add(g.team1); s16Teams.add(g.team2); });
 
       mapped.forEach((m, i) => {
-        if (!m.name || !r32Teams.has(m.name)) return;
+        if (!m.name || !s16Teams.has(m.name)) return;
         const oppScore = mapped[1 - i]?.score || 0;
         const prev = JSON.stringify(gameScores[m.name]);
         gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
@@ -1381,11 +1428,11 @@ function copyHandle() {
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
-// One-time cache bust: R64 scores leaked into R32 localStorage
-if (!localStorage.getItem('sp_r32_v2')) {
+// One-time cache bust: clear stale R32 localStorage for S16 transition
+if (!localStorage.getItem('sp_s16_v1')) {
   localStorage.removeItem('sp_r32_results');
   localStorage.removeItem('sp_r32_gameScores');
-  localStorage.setItem('sp_r32_v2', '1');
+  localStorage.setItem('sp_s16_v1', '1');
 }
 loadSavedResults();
 render();
