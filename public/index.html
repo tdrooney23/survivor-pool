@@ -599,13 +599,15 @@ const VENMO_HANDLE = '@Troy-Rooney-1';
 
 // Normalize team names from sheet to match schedule
 const teamNameMap = {};
-schedule.forEach(g => {
-  teamNameMap[g.team1.toLowerCase()] = g.team1;
-  teamNameMap[g.team1.toLowerCase().replace(/[.']/g, '')] = g.team1;
-  if (typeof g.team2 === 'string' && g.team2 !== 'TBD') {
-    teamNameMap[g.team2.toLowerCase()] = g.team2;
-    teamNameMap[g.team2.toLowerCase().replace(/[.']/g, '')] = g.team2;
-  }
+[r64Schedule, r32Schedule, s16Schedule, schedule].forEach(sched => {
+  sched.forEach(g => {
+    teamNameMap[g.team1.toLowerCase()] = g.team1;
+    teamNameMap[g.team1.toLowerCase().replace(/[.']/g, '')] = g.team1;
+    if (typeof g.team2 === 'string' && g.team2 !== 'TBD') {
+      teamNameMap[g.team2.toLowerCase()] = g.team2;
+      teamNameMap[g.team2.toLowerCase().replace(/[.']/g, '')] = g.team2;
+    }
+  });
 });
 function normalizeTeam(t) {
   if (!t) return '';
