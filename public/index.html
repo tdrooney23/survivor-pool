@@ -334,7 +334,7 @@
 <body>
 <header>
   <img class="mm-logo" id="mmlogo" alt="March Madness">
-  <div class="pool-title">2026 Survivor Pool &mdash; Sweet 16</div>
+  <div class="pool-title">2026 Survivor Pool &mdash; Elite 8</div>
 </header>
 <div id="loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;">
   <div style="font-size:48px;animation:bounce 0.6s ease infinite alternate;">🏀</div>
@@ -348,7 +348,7 @@
   <button class="refresh-btn" onclick="fetchScores(true)">↻ Refresh</button>
 </div>
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('games',this)">Sweet 16</button>
+  <button class="tab-btn active" onclick="switchTab('games',this)">Elite 8</button>
   <button class="tab-btn" onclick="switchTab('participants',this)">Participants</button>
   <button class="tab-btn" onclick="switchTab('terminators',this)">Top Terminators</button>
 </div>
@@ -549,22 +549,30 @@ const r32Schedule = [
   {day:'SUN', time:'9:45 PM',  net:'TBS',   seed1:4,  team1:'Alabama',       seed2:5,  team2:'Texas Tech'},
 ];
 
-// ── S16 SCHEDULE (active round) ──────────────────────────────
-const schedule = [
-  // THURSDAY — West & South regions
+// ── S16 SCHEDULE (frozen) ────────────────────────────────────
+const s16Schedule = [
   {day:'THU', time:'7:10 PM', net:'CBS',  seed1:2,  team1:'Purdue',        seed2:11, team2:'Texas'},
   {day:'THU', time:'7:30 PM', net:'TBS',  seed1:4,  team1:'Nebraska',      seed2:9,  team2:'Iowa'},
   {day:'THU', time:'9:45 PM', net:'CBS',  seed1:1,  team1:'Arizona',       seed2:4,  team2:'Arkansas'},
   {day:'THU', time:'10:05 PM',net:'TBS',  seed1:2,  team1:'Houston',       seed2:3,  team2:'Illinois'},
-  // FRIDAY — East & Midwest regions
   {day:'FRI', time:'7:10 PM', net:'CBS',  seed1:1,  team1:'Duke',          seed2:5,  team2:"St. John's"},
   {day:'FRI', time:'7:35 PM', net:'TBS',  seed1:1,  team1:'Michigan',      seed2:4,  team2:'Alabama'},
   {day:'FRI', time:'9:45 PM', net:'CBS',  seed1:2,  team1:'UConn',         seed2:3,  team2:'Michigan State'},
   {day:'FRI', time:'10:10 PM',net:'TBS',  seed1:2,  team1:'Iowa State',    seed2:6,  team2:'Tennessee'},
 ];
 
-// ── S16 CONFIG ───────────────────────────────────────────────
-const S16_PICKS_REVEALED = true; // flip to true to show logos instead of locks
+// ── E8 SCHEDULE (active round) ──────────────────────────────
+const schedule = [
+  // SATURDAY — South & West regions
+  {day:'SAT', time:'6:09 PM', net:'TBS',  seed1:3,  team1:'Illinois',      seed2:9,  team2:'Iowa'},
+  {day:'SAT', time:'8:49 PM', net:'TBS',  seed1:1,  team1:'Arizona',       seed2:2,  team2:'Purdue'},
+  // SUNDAY — Midwest & East regions
+  {day:'SUN', time:'2:15 PM', net:'CBS',  seed1:1,  team1:'Michigan',      seed2:6,  team2:'Tennessee'},
+  {day:'SUN', time:'5:05 PM', net:'CBS',  seed1:1,  team1:'Duke',          seed2:2,  team2:'UConn'},
+];
+
+// ── E8 CONFIG ────────────────────────────────────────────────
+const E8_PICKS_REVEALED = true; // flip to true to show logos instead of locks
 
 // ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
@@ -577,9 +585,11 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyCWf_BboL_TY9GJ2KR8M
 
 let picksMap = {};
 let s16PicksMap = {};
+let e8PicksMap = {};
 let allParticipants = [];
 let teamPickers = {};
 let r32TeamPickers = {};
+let s16TeamPickers = {};
 
 // ── PAID LIST (update daily) ──────────────────────────────────
 const paidList = new Set([
@@ -610,7 +620,7 @@ function isAliveAfterR64(name) {
   return picks.every(t => r64Results[t] === 'won');
 }
 
-function buildFromData(participants, r32picks, s16picks, paid) {
+function buildFromData(participants, r32picks, s16picks, e8picks, paid) {
   allParticipants = participants;
 
   // Build picksMap from R32 picks (1 pick per participant)
@@ -625,14 +635,20 @@ function buildFromData(participants, r32picks, s16picks, paid) {
     if (n && t) s16PicksMap[n] = [normalizeTeam(t)];
   });
 
+  // Build e8PicksMap from E8 picks (1 pick per participant)
+  e8PicksMap = {};
+  (e8picks || []).forEach(([n, t]) => {
+    if (n && t) e8PicksMap[n] = [normalizeTeam(t)];
+  });
+
   // Rebuild paidList from sheet
   paidList.clear();
   paid.forEach(name => { if (name) paidList.add(name); });
 
-  // Rebuild teamPickers from S16 picks (active round)
+  // Rebuild teamPickers from E8 picks (active round)
   teamPickers = {};
   allParticipants.forEach(name => {
-    (s16PicksMap[name] || []).forEach(t => {
+    (e8PicksMap[name] || []).forEach(t => {
       if (!teamPickers[t]) teamPickers[t] = [];
       teamPickers[t].push(name);
     });
@@ -646,11 +662,20 @@ function buildFromData(participants, r32picks, s16picks, paid) {
       r32TeamPickers[t].push(name);
     });
   });
+
+  // Also build s16TeamPickers for terminators
+  s16TeamPickers = {};
+  allParticipants.forEach(name => {
+    (s16PicksMap[name] || []).forEach(t => {
+      if (!s16TeamPickers[t]) s16TeamPickers[t] = [];
+      s16TeamPickers[t].push(name);
+    });
+  });
 }
 
 async function fetchSheetData() {
   if (!SHEET_URL) {
-    buildFromData(allParticipants, rawPicks, [], []);
+    buildFromData(allParticipants, rawPicks, [], [], []);
     return;
   }
   try {
@@ -662,13 +687,13 @@ async function fetchSheetData() {
         if (n && !r64Picks[n]) r64Picks[n] = [normalizeTeam(t1), normalizeTeam(t2)];
       });
     }
-    buildFromData(data.participants, data.r32picks || [], data.s16picks || [], data.paid);
+    buildFromData(data.participants, data.r32picks || [], data.s16picks || [], data.e8picks || [], data.paid);
     render();
     renderParticipants();
     renderTerminators();
   } catch(err) {
     console.warn('Sheet fetch error, using hardcoded data:', err);
-    buildFromData(allParticipants, rawPicks, [], []);
+    buildFromData(allParticipants, rawPicks, [], [], []);
   }
   document.getElementById('loader').style.display = 'none';
   document.getElementById('main-content').style.display = 'block';
@@ -705,13 +730,13 @@ function render() {
     return cards;
   }
 
-  // Build set of participants who have any loss (R64, R32, or S16)
+  // Build set of participants who have any loss (R64, R32, S16, or E8)
   const elimSet = new Set();
   const wonSet = new Set();
   allParticipants.forEach(name => {
     if (isEliminated(name)) { elimSet.add(name); return; }
-    const [s16t] = s16PicksMap[name] || [];
-    if (s16t && results[s16t] === 'won') wonSet.add(name);
+    const [e8t] = e8PicksMap[name] || [];
+    if (e8t && results[e8t] === 'won') wonSet.add(name);
   });
 
   function chipClass(name) {
@@ -720,8 +745,8 @@ function render() {
     return 'picker-chip';
   }
 
-  const thu = buildCards('THU');
-  const fri = buildCards('FRI');
+  const sat = buildCards('SAT');
+  const sun = buildCards('SUN');
 
   // Sort: completed games to the end
   function sortCards(cards) {
@@ -731,8 +756,8 @@ function render() {
       return aDone - bDone;
     });
   }
-  sortCards(thu);
-  sortCards(fri);
+  sortCards(sat);
+  sortCards(sun);
 
   let html = '';
   let idx = 0;
@@ -772,10 +797,10 @@ function render() {
     html += '</div>';
   }
 
-  // Not picked yet banner — alive participants without an S16 pick
+  // Not picked yet banner — alive participants without an E8 pick
   const notPicked = allParticipants.filter(n => {
     if (isEliminated(n)) return false;
-    const [t] = s16PicksMap[n] || [];
+    const [t] = e8PicksMap[n] || [];
     return !t;
   });
   let bannerHtml = '';
@@ -785,25 +810,25 @@ function render() {
     <div style="max-width:1400px;margin:0 auto;padding:0 20px 16px;">
       <div style="background:#0f1f3d;border:1px solid rgba(239,180,0,0.25);border-radius:8px;padding:12px 16px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f0b400;margin-bottom:8px;">
-          S16 Picks Not Yet Submitted (${notPicked.length})
+          E8 Picks Not Yet Submitted (${notPicked.length})
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
       </div>
     </div>`;
   }
 
-  renderGroup(fri, 'Friday, March 27');
-  renderGroup(thu, 'Thursday, March 26');
+  renderGroup(sat, 'Saturday, March 28');
+  renderGroup(sun, 'Sunday, March 29');
 
   document.getElementById('app').innerHTML = bannerHtml + html;
 
   const aliveCount = allParticipants.filter(n => !elimSet.has(n)).length;
   const elimCount = elimSet.size;
-  const pickedS16 = allParticipants.filter(n => !isEliminated(n) && (s16PicksMap[n] || [])[0]).length;
+  const pickedE8 = allParticipants.filter(n => !isEliminated(n) && (e8PicksMap[n] || [])[0]).length;
   document.getElementById('stats').innerHTML = `
     <div>Participants: <span>${allParticipants.length}</span></div>
     <div>Paid: <span>${paidList.size}</span></div>
-    <div>S16 Picked: <span>${pickedS16}</span></div>
+    <div>E8 Picked: <span>${pickedE8}</span></div>
     <div>Alive: <span style="color:#22c55e;">${aliveCount}</span></div>
     <div>Eliminated: <span style="color:#ef4444;">${elimCount}</span></div>`;
 }
@@ -814,20 +839,20 @@ const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABD
 // Save completed results to localStorage so they survive ESPN API day-rotation
 function saveResults() {
   try {
-    localStorage.setItem('sp_s16_results', JSON.stringify(results));
-    localStorage.setItem('sp_s16_gameScores', JSON.stringify(gameScores));
+    localStorage.setItem('sp_e8_results', JSON.stringify(results));
+    localStorage.setItem('sp_e8_gameScores', JSON.stringify(gameScores));
   } catch(e) {}
 }
 function loadSavedResults() {
   try {
-    // Only load results for teams in our S16 schedule
-    const s16Teams = new Set();
-    schedule.forEach(g => { s16Teams.add(g.team1); s16Teams.add(g.team2); });
-    const saved = JSON.parse(localStorage.getItem('sp_s16_results') || '{}');
-    const savedScores = JSON.parse(localStorage.getItem('sp_s16_gameScores') || '{}');
-    Object.keys(saved).forEach(k => { if (s16Teams.has(k) && !results[k]) results[k] = saved[k]; });
+    // Only load results for teams in our E8 schedule
+    const e8Teams = new Set();
+    schedule.forEach(g => { e8Teams.add(g.team1); e8Teams.add(g.team2); });
+    const saved = JSON.parse(localStorage.getItem('sp_e8_results') || '{}');
+    const savedScores = JSON.parse(localStorage.getItem('sp_e8_gameScores') || '{}');
+    Object.keys(saved).forEach(k => { if (e8Teams.has(k) && !results[k]) results[k] = saved[k]; });
     Object.keys(savedScores).forEach(k => {
-      if (!s16Teams.has(k)) return;
+      if (!e8Teams.has(k)) return;
       if (!gameScores[k] || gameScores[k].state !== 'post') {
         if (savedScores[k]?.state === 'post') gameScores[k] = savedScores[k];
       }
@@ -893,7 +918,37 @@ const r32Scores = {
   'Texas Tech': { score1:65, score2:90, state:'post', clock:'0:00', period:'2H' },
 };
 
-// ── S16 RESULTS & SCORES (live) ─────────────────────────────
+// ── S16 RESULTS & SCORES (frozen) ────────────────────────────
+const s16Results = {
+  'Purdue': 'won', 'Texas': 'lost',
+  'Iowa': 'won', 'Nebraska': 'lost',
+  'Arizona': 'won', 'Arkansas': 'lost',
+  'Illinois': 'won', 'Houston': 'lost',
+  'Duke': 'won', "St. John's": 'lost',
+  'Michigan': 'won', 'Alabama': 'lost',
+  'UConn': 'won', 'Michigan State': 'lost',
+  'Tennessee': 'won', 'Iowa State': 'lost',
+};
+const s16Scores = {
+  'Purdue': { score1:79, score2:77, state:'post', clock:'0:00', period:'2H' },
+  'Texas': { score1:77, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'Iowa': { score1:77, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Nebraska': { score1:71, score2:77, state:'post', clock:'0:00', period:'2H' },
+  'Arizona': { score1:109, score2:88, state:'post', clock:'0:00', period:'2H' },
+  'Arkansas': { score1:88, score2:109, state:'post', clock:'0:00', period:'2H' },
+  'Illinois': { score1:65, score2:55, state:'post', clock:'0:00', period:'2H' },
+  'Houston': { score1:55, score2:65, state:'post', clock:'0:00', period:'2H' },
+  'Duke': { score1:80, score2:75, state:'post', clock:'0:00', period:'2H' },
+  "St. John's": { score1:75, score2:80, state:'post', clock:'0:00', period:'2H' },
+  'Michigan': { score1:90, score2:77, state:'post', clock:'0:00', period:'2H' },
+  'Alabama': { score1:77, score2:90, state:'post', clock:'0:00', period:'2H' },
+  'UConn': { score1:67, score2:63, state:'post', clock:'0:00', period:'2H' },
+  'Michigan State': { score1:63, score2:67, state:'post', clock:'0:00', period:'2H' },
+  'Tennessee': { score1:76, score2:62, state:'post', clock:'0:00', period:'2H' },
+  'Iowa State': { score1:62, score2:76, state:'post', clock:'0:00', period:'2H' },
+};
+
+// ── E8 RESULTS & SCORES (live) ──────────────────────────────
 const results = {};
 const gameScores = {};
 
@@ -981,7 +1036,37 @@ function renderTerminators() {
     }
   });
 
-  // S16 kills
+  // S16 kills (frozen)
+  s16Schedule.forEach(g => {
+    if (s16Results[g.team1] === 'won' && typeof g.seed2 === 'number') {
+      const victims = s16TeamPickers[g.team2] || [];
+      if (victims.length > 0) {
+        const s = s16Scores[g.team1];
+        gameWins.push({
+          team: g.team1, seed: g.seed1,
+          loser: g.team2, loserSeed: g.seed2,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Sweet 16',
+          victims,
+        });
+      }
+    }
+    if (typeof g.seed2 === 'number' && s16Results[g.team2] === 'won') {
+      const victims = s16TeamPickers[g.team1] || [];
+      if (victims.length > 0) {
+        const s = s16Scores[g.team2];
+        gameWins.push({
+          team: g.team2, seed: g.seed2,
+          loser: g.team1, loserSeed: g.seed1,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Sweet 16',
+          victims,
+        });
+      }
+    }
+  });
+
+  // E8 kills (live)
   schedule.forEach(g => {
     if (results[g.team1] === 'won' && typeof g.seed2 === 'number') {
       const victims = teamPickers[g.team2] || [];
@@ -991,7 +1076,7 @@ function renderTerminators() {
           team: g.team1, seed: g.seed1,
           loser: g.team2, loserSeed: g.seed2,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Sweet 16',
+          kills: victims.length, round: 'Elite 8',
           victims,
         });
       }
@@ -1004,7 +1089,7 @@ function renderTerminators() {
           team: g.team2, seed: g.seed2,
           loser: g.team1, loserSeed: g.seed1,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Sweet 16',
+          kills: victims.length, round: 'Elite 8',
           victims,
         });
       }
@@ -1115,18 +1200,30 @@ function renderParticipants() {
     else if (r32t) r32State = pickState(r32t, r32r);
     else r32State = 'nopick';
 
-    // S16 pick state
+    // S16 pick state (frozen)
     const [s16t] = s16PicksMap[name] || [''];
-    const s16r = results[s16t] || null;
+    const s16r = s16Results[s16t] || null;
     let s16State;
     if (elim) {
       s16State = 'elim';
-    } else if (s16t && !S16_PICKS_REVEALED) {
-      s16State = 's16-locked';
-    } else if (s16t && S16_PICKS_REVEALED) {
-      s16State = pickState(s16t, s16r); // live won/lost/pending
+    } else if (s16t) {
+      s16State = pickState(s16t, s16r);
     } else {
-      s16State = 'nopick'; // active round — waiting for pick
+      s16State = 'nopick';
+    }
+
+    // E8 pick state (active)
+    const [e8t] = e8PicksMap[name] || [''];
+    const e8r = results[e8t] || null;
+    let e8State;
+    if (elim) {
+      e8State = 'elim';
+    } else if (e8t && !E8_PICKS_REVEALED) {
+      e8State = 's16-locked';
+    } else if (e8t && E8_PICKS_REVEALED) {
+      e8State = pickState(e8t, e8r);
+    } else {
+      e8State = 'nopick';
     }
 
     const futureState = elim ? 'elim' : 'locked';
@@ -1140,9 +1237,8 @@ function renderParticipants() {
         ${makeCircle(r64t1, pickState(r64t1, r64r1), 'R64', true)}
         ${makeCircle(r64t2, pickState(r64t2, r64r2), 'R64', true)}
         ${makeCircle(r32t, r32State, 'R32', true)}
-        ${makeCircle(s16t, s16State, 'S16', S16_PICKS_REVEALED)}
-        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
-        ${makeCircle('', futureState, 'E8', false)}
+        ${makeCircle(s16t, s16State, 'S16', true)}
+        ${makeCircle(e8t, e8State, 'E8', E8_PICKS_REVEALED)}
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle('', futureState, 'F4', false)}
         ${makeCircle('', futureState, 'CHMP', false)}
@@ -1164,7 +1260,9 @@ function isEliminated(name) {
   const r32 = picksMap[name] || [];
   if (r32.some(t => r32Results[t] === 'lost')) return true;
   const s16 = s16PicksMap[name] || [];
-  if (s16.some(t => results[t] === 'lost')) return true;
+  if (s16.some(t => s16Results[t] === 'lost')) return true;
+  const e8 = e8PicksMap[name] || [];
+  if (e8.some(t => results[t] === 'lost')) return true;
   return false;
 }
 
@@ -1357,12 +1455,12 @@ async function fetchScores(manual = false) {
         };
       });
 
-      // Only process teams in our S16 schedule
-      const s16Teams = new Set();
-      schedule.forEach(g => { s16Teams.add(g.team1); s16Teams.add(g.team2); });
+      // Only process teams in our E8 schedule
+      const e8Teams = new Set();
+      schedule.forEach(g => { e8Teams.add(g.team1); e8Teams.add(g.team2); });
 
       mapped.forEach((m, i) => {
-        if (!m.name || !s16Teams.has(m.name)) return;
+        if (!m.name || !e8Teams.has(m.name)) return;
         const oppScore = mapped[1 - i]?.score || 0;
         const prev = JSON.stringify(gameScores[m.name]);
         gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
@@ -1428,11 +1526,11 @@ function copyHandle() {
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
-// One-time cache bust: clear stale R32 localStorage for S16 transition
-if (!localStorage.getItem('sp_s16_v1')) {
-  localStorage.removeItem('sp_r32_results');
-  localStorage.removeItem('sp_r32_gameScores');
-  localStorage.setItem('sp_s16_v1', '1');
+// One-time cache bust: clear stale S16 localStorage for E8 transition
+if (!localStorage.getItem('sp_e8_v1')) {
+  localStorage.removeItem('sp_s16_results');
+  localStorage.removeItem('sp_s16_gameScores');
+  localStorage.setItem('sp_e8_v1', '1');
 }
 loadSavedResults();
 render();
