@@ -334,7 +334,7 @@
 <body>
 <header>
   <img class="mm-logo" id="mmlogo" alt="March Madness">
-  <div class="pool-title">2026 Survivor Pool &mdash; Elite 8</div>
+  <div class="pool-title">2026 Survivor Pool &mdash; Final Four</div>
 </header>
 <div id="loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;">
   <div style="font-size:48px;animation:bounce 0.6s ease infinite alternate;">🏀</div>
@@ -348,14 +348,13 @@
   <button class="refresh-btn" onclick="fetchScores(true)">↻ Refresh</button>
 </div>
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('games',this)">Elite 8</button>
-  <button class="tab-btn" onclick="switchTab('participants',this)">Participants</button>
+  <button class="tab-btn active" onclick="switchTab('participants',this)">Participants</button>
   <button class="tab-btn" onclick="switchTab('terminators',this)">Top Terminators</button>
 </div>
-<div id="games" class="tab-panel active">
+<div id="games" class="tab-panel">
   <div id="app"></div>
 </div>
-<div id="participants" class="tab-panel">
+<div id="participants" class="tab-panel active">
   <div style="max-width:1400px;margin:0 auto;padding:12px 20px 0;">
     <input id="participant-search" type="text" placeholder="Search by name..." oninput="renderParticipants()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--card-border);background:var(--dark-card);color:#fff;font-size:14px;outline:none;box-sizing:border-box;">
   </div>
@@ -574,6 +573,9 @@ const schedule = [
 // ── E8 CONFIG ────────────────────────────────────────────────
 const E8_PICKS_REVEALED = true; // flip to true to show logos instead of locks
 
+// ── F4 CONFIG ────────────────────────────────────────────────
+const F4_PICKS_REVEALED = false; // flip to true to show logos instead of locks
+
 // ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
   // ['Name', 'R32Team'] — populated from Google Sheet
@@ -586,6 +588,7 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyCWf_BboL_TY9GJ2KR8M
 let picksMap = {};
 let s16PicksMap = {};
 let e8PicksMap = {};
+let f4PicksMap = {};
 let allParticipants = [];
 let teamPickers = {};
 let r32TeamPickers = {};
@@ -622,7 +625,7 @@ function isAliveAfterR64(name) {
   return picks.every(t => r64Results[t] === 'won');
 }
 
-function buildFromData(participants, r32picks, s16picks, e8picks, paid) {
+function buildFromData(participants, r32picks, s16picks, e8picks, f4picks, paid) {
   allParticipants = participants;
 
   // Build picksMap from R32 picks (1 pick per participant)
@@ -641,6 +644,12 @@ function buildFromData(participants, r32picks, s16picks, e8picks, paid) {
   e8PicksMap = {};
   (e8picks || []).forEach(([n, t]) => {
     if (n && t) e8PicksMap[n] = [normalizeTeam(t)];
+  });
+
+  // Build f4PicksMap from F4 picks (1 pick per participant)
+  f4PicksMap = {};
+  (f4picks || []).forEach(([n, t]) => {
+    if (n && t) f4PicksMap[n] = [/^out$/i.test(t.trim()) ? 'Out' : normalizeTeam(t)];
   });
 
   // Rebuild paidList from sheet
@@ -677,7 +686,7 @@ function buildFromData(participants, r32picks, s16picks, e8picks, paid) {
 
 async function fetchSheetData() {
   if (!SHEET_URL) {
-    buildFromData(allParticipants, rawPicks, [], [], []);
+    buildFromData(allParticipants, rawPicks, [], [], [], [], []);
     return;
   }
   try {
@@ -689,13 +698,13 @@ async function fetchSheetData() {
         if (n && !r64Picks[n]) r64Picks[n] = [normalizeTeam(t1), normalizeTeam(t2)];
       });
     }
-    buildFromData(data.participants, data.r32picks || [], data.s16picks || [], data.e8picks || [], data.paid);
+    buildFromData(data.participants, data.r32picks || [], data.s16picks || [], data.e8picks || [], data.f4picks || [], data.paid);
     render();
     renderParticipants();
     renderTerminators();
   } catch(err) {
     console.warn('Sheet fetch error, using hardcoded data:', err);
-    buildFromData(allParticipants, rawPicks, [], [], []);
+    buildFromData(allParticipants, rawPicks, [], [], [], [], []);
   }
   document.getElementById('loader').style.display = 'none';
   document.getElementById('main-content').style.display = 'block';
@@ -826,11 +835,11 @@ function render() {
 
   const aliveCount = allParticipants.filter(n => !elimSet.has(n)).length;
   const elimCount = elimSet.size;
-  const pickedE8 = allParticipants.filter(n => !isEliminated(n) && (e8PicksMap[n] || [])[0]).length;
+  const pickedF4 = allParticipants.filter(n => !isEliminated(n) && (f4PicksMap[n] || [])[0]).length;
   document.getElementById('stats').innerHTML = `
     <div>Participants: <span>${allParticipants.length}</span></div>
     <div>Paid: <span>${paidList.size}</span></div>
-    <div>E8 Picked: <span>${pickedE8}</span></div>
+    <div>F4 Picked: <span>${pickedF4}</span></div>
     <div>Alive: <span style="color:#22c55e;">${aliveCount}</span></div>
     <div>Eliminated: <span style="color:#ef4444;">${elimCount}</span></div>`;
 }
@@ -950,9 +959,23 @@ const s16Scores = {
   'Iowa State': { score1:62, score2:76, state:'post', clock:'0:00', period:'2H' },
 };
 
-// ── E8 RESULTS & SCORES (live) ──────────────────────────────
-const results = {};
-const gameScores = {};
+// ── E8 RESULTS & SCORES (frozen) ────────────────────────────
+const results = {
+  'Illinois': 'won', 'Iowa': 'lost',
+  'Arizona': 'won', 'Purdue': 'lost',
+  'Michigan': 'won', 'Tennessee': 'lost',
+  'UConn': 'won', 'Duke': 'lost',
+};
+const gameScores = {
+  'Illinois': { score1:71, score2:59, state:'post', clock:'0:00', period:'2H' },
+  'Iowa': { score1:59, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Arizona': { score1:79, score2:64, state:'post', clock:'0:00', period:'2H' },
+  'Purdue': { score1:64, score2:79, state:'post', clock:'0:00', period:'2H' },
+  'Michigan': { score1:95, score2:62, state:'post', clock:'0:00', period:'2H' },
+  'Tennessee': { score1:62, score2:95, state:'post', clock:'0:00', period:'2H' },
+  'UConn': { score1:73, score2:72, state:'post', clock:'0:00', period:'2H' },
+  'Duke': { score1:72, score2:73, state:'post', clock:'0:00', period:'2H' },
+};
 
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(id, btn) {
@@ -1228,7 +1251,25 @@ function renderParticipants() {
       e8State = 'nopick';
     }
 
-    const futureState = elim ? 'elim' : 'locked';
+    // F4 pick state (active round)
+    const [f4t] = f4PicksMap[name] || [''];
+    let f4State, chmpState;
+    if (elim) {
+      f4State = 'elim';
+      chmpState = 'elim';
+    } else if (f4t === 'Out') {
+      f4State = 'out';
+      chmpState = 'out';
+    } else if (f4t && !F4_PICKS_REVEALED) {
+      f4State = 's16-locked';
+      chmpState = 'locked';
+    } else if (f4t && F4_PICKS_REVEALED) {
+      f4State = pickState(f4t, null);
+      chmpState = 'locked';
+    } else {
+      f4State = 'locked';
+      chmpState = 'locked';
+    }
 
     const paid = paidList.has(name);
     const onclickAttr = paid ? '' : `onclick="openVenmo('${name.replace(/'/g, "\\'")}')"`;
@@ -1242,8 +1283,8 @@ function renderParticipants() {
         ${makeCircle(s16t, s16State, 'S16', true)}
         ${makeCircle(e8t, e8State, 'E8', E8_PICKS_REVEALED)}
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
-        ${makeCircle('', futureState, 'F4', false)}
-        ${makeCircle('', futureState, 'CHMP', false)}
+        ${makeCircle(f4t === 'Out' ? '' : f4t, f4State, 'F4', F4_PICKS_REVEALED)}
+        ${makeCircle('', chmpState, 'CHMP', false)}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
         <div class="participant-status">
@@ -1302,6 +1343,10 @@ function makeCircle(team, state, label, showLogo) {
     border = '2px dashed #2a3a5a';
     bg = 'transparent';
     inner = `<div style="font-size:8px;font-weight:700;color:#2a4a6a;text-align:center;line-height:1.2;">NO<br>PICK</div>`;
+  } else if (state === 'out') {
+    border = '2px solid #ef4444';
+    bg = 'rgba(239,68,68,0.08)';
+    inner = `<div style="font-size:6px;font-weight:800;color:#ef4444;text-align:center;line-height:1.2;text-transform:uppercase;">Out of<br>Picks</div>`;
   } else if (state === 's16-locked') {
     // Has pick but not yet revealed — lock icon
     border = '2px solid #3b82f6';
@@ -1315,7 +1360,7 @@ function makeCircle(team, state, label, showLogo) {
   }
 
   const labelColor = state === 'won' ? '#22c55e'
-    : (state === 'lost' || state === 'elim') ? '#ef4444'
+    : (state === 'lost' || state === 'elim' || state === 'out') ? '#ef4444'
     : (state === 'pending' || state === 's16-locked') ? '#3b82f6'
     : state === 'nopick' ? '#2a4a6a'
     : '#1e2d45';
@@ -1528,11 +1573,11 @@ function copyHandle() {
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
-// One-time cache bust: clear stale S16 localStorage for E8 transition
-if (!localStorage.getItem('sp_e8_v1')) {
-  localStorage.removeItem('sp_s16_results');
-  localStorage.removeItem('sp_s16_gameScores');
-  localStorage.setItem('sp_e8_v1', '1');
+// One-time cache bust: clear stale E8 localStorage for F4 transition
+if (!localStorage.getItem('sp_f4_v1')) {
+  localStorage.removeItem('sp_e8_results');
+  localStorage.removeItem('sp_e8_gameScores');
+  localStorage.setItem('sp_f4_v1', '1');
 }
 loadSavedResults();
 render();
