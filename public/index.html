@@ -182,6 +182,158 @@
   .pay-btn.unpaid:hover { background:rgba(239,68,68,0.25); }
   footer { text-align:center; padding:16px; color:rgba(255,255,255,0.18); font-size:11px; letter-spacing:1px; }
 
+  /* ── FINAL FOUR BRACKET ── */
+  .f4-header {
+    text-align:center; padding:8px 20px 20px;
+    max-width:1400px; margin:0 auto;
+  }
+  .f4-title {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:32px; font-weight:900; text-transform:uppercase;
+    letter-spacing:3px; color:#fff;
+    text-shadow:0 2px 20px rgba(232,93,38,0.3);
+    line-height:1;
+  }
+  .f4-subtitle {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:11px; font-weight:700; letter-spacing:4px;
+    text-transform:uppercase; color:#e85d26; margin-top:4px;
+  }
+  .f4-divider {
+    width:80px; height:2px; margin:10px auto 0;
+    background:linear-gradient(90deg, transparent, #e85d26, transparent);
+  }
+  .bracket-wrap {
+    max-width:1400px; margin:0 auto; padding:0 20px 24px;
+  }
+  .bracket {
+    display:grid;
+    grid-template-columns:1fr 160px 1fr;
+    gap:0;
+    align-items:center;
+    min-height:420px;
+  }
+  .bracket-side {
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .bracket-center {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:0; position:relative;
+  }
+  /* Vertical bracket lines from center */
+  .bracket-center::before {
+    content:''; position:absolute; left:0; top:20%; bottom:20%;
+    width:2px; background:linear-gradient(180deg, transparent, #e85d26 30%, #e85d26 70%, transparent);
+  }
+  .bracket-center::after {
+    content:''; position:absolute; right:0; top:20%; bottom:20%;
+    width:2px; background:linear-gradient(180deg, transparent, #e85d26 30%, #e85d26 70%, transparent);
+  }
+  /* Horizontal bracket lines from cards */
+  .bracket-side.left .bracket-team { position:relative; }
+  .bracket-side.left .bracket-team::after {
+    content:''; position:absolute; right:-1px; top:50%;
+    width:calc(100% + 2px); max-width:40px; height:2px;
+    background:#e85d26; transform:translateX(100%);
+  }
+  .bracket-side.right .bracket-team { position:relative; }
+  .bracket-side.right .bracket-team::after {
+    content:''; position:absolute; left:-1px; top:50%;
+    width:calc(100% + 2px); max-width:40px; height:2px;
+    background:#e85d26; transform:translateX(-100%);
+  }
+  /* Center hub — racing-inspired circle */
+  .bracket-hub {
+    width:100px; height:100px; border-radius:50%;
+    border:3px solid #e85d26;
+    background:radial-gradient(circle, #0f1f3d 60%, rgba(232,93,38,0.15));
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; z-index:2;
+    box-shadow:0 0 30px rgba(232,93,38,0.2), inset 0 0 20px rgba(232,93,38,0.05);
+  }
+  .bracket-hub::before {
+    content:''; position:absolute; inset:6px; border-radius:50%;
+    border:1px solid rgba(232,93,38,0.3);
+  }
+  .bracket-hub-icon {
+    font-size:32px; filter:drop-shadow(0 2px 8px rgba(255,215,0,0.5));
+  }
+  .bracket-hub-label {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:8px; font-weight:800; letter-spacing:2px;
+    text-transform:uppercase; color:#e85d26; margin-top:2px;
+  }
+
+  .bracket-team {
+    background:var(--dark-card);
+    border:1px solid var(--card-border);
+    border-radius:10px; padding:14px 16px;
+    transition:transform 0.2s, box-shadow 0.2s;
+    animation:fadeUp 0.4s ease both;
+    position:relative; overflow:visible;
+  }
+  .bracket-team:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(232,93,38,0.15); }
+  .bracket-team.card-won { border-color:#22c55e; box-shadow:0 0 20px rgba(34,197,94,0.15); }
+  .bracket-team.card-lost { border-color:#ef4444; opacity:0.7; }
+  .bracket-team-header {
+    display:flex; align-items:center; gap:12px;
+  }
+  .bracket-team-logo {
+    width:52px; height:52px; object-fit:contain;
+    filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    flex-shrink:0;
+  }
+  .bracket-team-info { flex:1; min-width:0; }
+  .bracket-team-name {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:20px; font-weight:900; text-transform:uppercase;
+    letter-spacing:0.5px; color:#fff; line-height:1.1;
+  }
+  .bracket-team-seed {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:10px; font-weight:700; color:#e85d26;
+    letter-spacing:1.5px; text-transform:uppercase;
+  }
+  .bracket-team-meta {
+    display:flex; align-items:center; gap:8px; margin-top:3px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:11px; font-weight:700; color:var(--gray);
+    letter-spacing:0.5px; text-transform:uppercase;
+  }
+  .bracket-team-meta .vs-label { color:#e85d26; font-weight:800; }
+  .bracket-pickers {
+    border-top:1px solid rgba(232,93,38,0.15);
+    padding-top:8px; margin-top:10px;
+  }
+  .bracket-game-label {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:10px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; color:var(--gray); margin-bottom:8px;
+    text-align:center; display:flex; align-items:center; gap:8px;
+    justify-content:center;
+  }
+  .bracket-game-label::before, .bracket-game-label::after {
+    content:''; flex:1; max-width:40px; height:1px; background:rgba(232,93,38,0.3);
+  }
+
+  /* Mobile: stack bracket vertically */
+  @media (max-width:800px) {
+    .bracket {
+      grid-template-columns:1fr;
+      gap:0;
+    }
+    .bracket-side { gap:12px; }
+    .bracket-side.left { order:1; }
+    .bracket-center { order:2; padding:20px 0; }
+    .bracket-side.right { order:3; }
+    .bracket-center::before, .bracket-center::after { display:none; }
+    .bracket-side.left .bracket-team::after,
+    .bracket-side.right .bracket-team::after { display:none; }
+    .bracket-hub { width:80px; height:80px; }
+    .bracket-hub-icon { font-size:26px; }
+    .f4-title { font-size:24px; letter-spacing:2px; }
+  }
+
   /* ── LIVE BAR ── */
   .live-bar {
     display:flex; align-items:center; justify-content:center;
@@ -742,22 +894,7 @@ function logoEl(team) {
 function render() {
   document.getElementById('mmlogo').src = LOGOS['__mm__'];
 
-  // Build card entries for both sides of each game
-  function buildCards(day) {
-    const cards = [];
-    schedule.filter(g => g.day === day).forEach(g => {
-      if ((teamPickers[g.team1]||[]).length > 0) {
-        const oppLabel = typeof g.seed2==='number' ? `(${g.seed2}) ${g.team2}` : g.team2;
-        cards.push({ team: g.team1, seed: g.seed1, opp: oppLabel, time: g.time, net: g.net });
-      }
-      if (typeof g.seed2==='number' && (teamPickers[g.team2]||[]).length > 0) {
-        cards.push({ team: g.team2, seed: g.seed2, opp: `(${g.seed1}) ${g.team1}`, time: g.time, net: g.net });
-      }
-    });
-    return cards;
-  }
-
-  // Build set of participants who have any loss (R64, R32, S16, E8, or F4)
+  // Build set of participants who have any loss
   const elimSet = new Set();
   const wonSet = new Set();
   allParticipants.forEach(name => {
@@ -772,79 +909,76 @@ function render() {
     return 'picker-chip';
   }
 
-  const sat = buildCards('SAT');
+  // Helper: build a bracket team card
+  function teamCard(team, seed, oppTeam, oppSeed, time, net, delay) {
+    const pickers = teamPickers[team] || [];
+    const chips = pickers.map(p => `<span class="${chipClass(p)}">${p}</span>`).join('');
+    const r = results[team];
+    const cardClass = r === 'won' ? 'card-won' : r === 'lost' ? 'card-lost' : '';
+    const logoSrc = LOGOS[team];
+    const logoHtml = logoSrc
+      ? `<img class="bracket-team-logo" src="${logoSrc}" alt="${team}">`
+      : `<div class="bracket-team-logo" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.07);border-radius:50%;font-weight:800;color:#fff;font-size:12px;">${team}</div>`;
 
-  // Sort: completed games to the end
-  function sortCards(cards) {
-    return cards.sort((a, b) => {
-      const aDone = results[a.team] === 'won' || results[a.team] === 'lost' ? 1 : 0;
-      const bDone = results[b.team] === 'won' || results[b.team] === 'lost' ? 1 : 0;
-      return aDone - bDone;
-    });
-  }
-  sortCards(sat);
-
-  let html = '';
-  let idx = 0;
-
-  function renderGroup(cards, label) {
-    if (!cards.length) return;
-    html += `<div class="day-divider">${label}</div><div class="games-grid">`;
-    cards.forEach(c => {
-      const pickers = teamPickers[c.team] || [];
-      const chips = pickers.map(p=>`<span class="${chipClass(p)}">${p}</span>`).join('');
-      const r = results[c.team];
-      const cardClass = r === 'won' ? 'card-won' : r === 'lost' ? 'card-lost' : '';
-      html += `
-      <div class="game-card ${cardClass}" data-team="${c.team}" style="animation-delay:${idx*35}ms">
-        <div class="card-body">
-          <div class="logo-block">
-            <div class="team-seed">SEED ${c.seed}</div>
-            ${logoEl(c.team)}
-            <div class="team-name">${c.team}</div>
-          </div>
-          <div class="card-divider"></div>
-          <div class="pickers-section">
-            <div class="pickers-label">Picked by (${pickers.length})</div>
-            <div class="picker-chips">${chips}</div>
+    return `
+    <div class="bracket-team ${cardClass}" data-team="${team}" style="animation-delay:${delay}ms">
+      <div class="bracket-team-header">
+        ${logoHtml}
+        <div class="bracket-team-info">
+          <div class="bracket-team-seed">${seed} Seed</div>
+          <div class="bracket-team-name">${team}</div>
+          <div class="bracket-team-meta">
+            <span class="vs-label">VS</span> (${oppSeed}) ${oppTeam}
+            <span class="score-area" data-team="${team}">${scoreHTML(team)}</span>
           </div>
         </div>
-        <div class="card-footer">
-          <div class="vs-info"><em>VS</em>${c.opp}<span class="score-area" data-team="${c.team}">${scoreHTML(c.team)}</span></div>
-          <div class="footer-right">
-            <span class="game-time">${c.time}</span>
-            <span class="network-badge ${netClass(c.net)}">${c.net}</span>
-          </div>
+      </div>
+      <div class="bracket-team-meta" style="justify-content:flex-end;margin-top:6px;">
+        <span style="color:var(--gray);">${time}</span>
+        <span class="network-badge ${netClass(net)}">${net}</span>
+      </div>
+      <div class="bracket-pickers">
+        <div class="pickers-label" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gray);text-transform:uppercase;margin-bottom:5px;">
+          Picked by (${pickers.length})
         </div>
-      </div>`;
-      idx++;
-    });
-    html += '</div>';
-  }
-
-  // Not picked yet banner — alive participants without an F4 pick
-  const notPicked = allParticipants.filter(n => {
-    if (isEliminated(n)) return false;
-    const [t] = f4PicksMap[n] || [];
-    return !t;
-  });
-  let bannerHtml = '';
-  if (notPicked.length > 0) {
-    const chips = notPicked.map(n => `<span class="picker-chip" style="border-color:rgba(239,180,0,0.3);background:rgba(239,180,0,0.08);color:#f0b400;">${n}</span>`).join('');
-    bannerHtml = `
-    <div style="max-width:1400px;margin:0 auto;padding:0 20px 16px;">
-      <div style="background:#0f1f3d;border:1px solid rgba(239,180,0,0.25);border-radius:8px;padding:12px 16px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f0b400;margin-bottom:8px;">
-          F4 Picks Not Yet Submitted (${notPicked.length})
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
+        <div class="picker-chips">${chips}</div>
       </div>
     </div>`;
   }
 
-  renderGroup(sat, 'Saturday, April 4');
+  // Game 1: UConn vs Illinois (left side)
+  const g1 = schedule[0];
+  // Game 2: Arizona vs Michigan (right side)
+  const g2 = schedule[1];
 
-  document.getElementById('app').innerHTML = bannerHtml + html;
+  const html = `
+  <div class="f4-header">
+    <div class="f4-title">Final Four</div>
+    <div class="f4-subtitle">Indianapolis &middot; Saturday, April 4</div>
+    <div class="f4-divider"></div>
+  </div>
+  <div class="bracket-wrap">
+    <div class="bracket">
+      <div class="bracket-side left">
+        <div class="bracket-game-label">Game 1 &middot; ${g1.time}</div>
+        ${teamCard(g1.team1, g1.seed1, g1.team2, g1.seed2, g1.time, g1.net, 0)}
+        ${teamCard(g1.team2, g1.seed2, g1.team1, g1.seed1, g1.time, g1.net, 50)}
+      </div>
+      <div class="bracket-center">
+        <div class="bracket-hub">
+          <div class="bracket-hub-icon">🏆</div>
+          <div class="bracket-hub-label">Apr 7</div>
+        </div>
+      </div>
+      <div class="bracket-side right">
+        <div class="bracket-game-label">Game 2 &middot; ${g2.time}</div>
+        ${teamCard(g2.team1, g2.seed1, g2.team2, g2.seed2, g2.time, g2.net, 100)}
+        ${teamCard(g2.team2, g2.seed2, g2.team1, g2.seed1, g2.time, g2.net, 150)}
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('app').innerHTML = html;
 
   const aliveCount = allParticipants.filter(n => !elimSet.has(n)).length;
   const elimCount = elimSet.size;
