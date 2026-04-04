@@ -1485,7 +1485,8 @@ function isEliminated(name) {
   const e8 = e8PicksMap[name] || [];
   if (e8.some(t => e8Results[t] === 'lost')) return true;
   const f4 = f4PicksMap[name] || [];
-  if (f4.some(t => t !== 'Out' && results[t] === 'lost')) return true;
+  if (f4.some(t => t === 'Out')) return true;
+  if (f4.some(t => results[t] === 'lost')) return true;
   return false;
 }
 
