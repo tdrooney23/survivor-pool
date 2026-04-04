@@ -348,13 +348,14 @@
   <button class="refresh-btn" onclick="fetchScores(true)">↻ Refresh</button>
 </div>
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('participants',this)">Participants</button>
+  <button class="tab-btn active" onclick="switchTab('games',this)">Final Four</button>
+  <button class="tab-btn" onclick="switchTab('participants',this)">Participants</button>
   <button class="tab-btn" onclick="switchTab('terminators',this)">Top Terminators</button>
 </div>
-<div id="games" class="tab-panel">
+<div id="games" class="tab-panel active">
   <div id="app"></div>
 </div>
-<div id="participants" class="tab-panel active">
+<div id="participants" class="tab-panel">
   <div style="max-width:1400px;margin:0 auto;padding:12px 20px 0;">
     <input id="participant-search" type="text" placeholder="Search by name..." oninput="renderParticipants()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--card-border);background:var(--dark-card);color:#fff;font-size:14px;outline:none;box-sizing:border-box;">
   </div>
@@ -560,21 +561,25 @@ const s16Schedule = [
   {day:'FRI', time:'10:10 PM',net:'TBS',  seed1:2,  team1:'Iowa State',    seed2:6,  team2:'Tennessee'},
 ];
 
-// ── E8 SCHEDULE (active round) ──────────────────────────────
-const schedule = [
-  // SATURDAY — South & West regions
+// ── E8 SCHEDULE (frozen) ─────────────────────────────────────
+const e8Schedule = [
   {day:'SAT', time:'6:09 PM', net:'TBS',  seed1:3,  team1:'Illinois',      seed2:9,  team2:'Iowa'},
   {day:'SAT', time:'8:49 PM', net:'TBS',  seed1:1,  team1:'Arizona',       seed2:2,  team2:'Purdue'},
-  // SUNDAY — Midwest & East regions
   {day:'SUN', time:'2:15 PM', net:'CBS',  seed1:1,  team1:'Michigan',      seed2:6,  team2:'Tennessee'},
   {day:'SUN', time:'5:05 PM', net:'CBS',  seed1:1,  team1:'Duke',          seed2:2,  team2:'UConn'},
+];
+
+// ── F4 SCHEDULE (active round) ──────────────────────────────
+const schedule = [
+  {day:'SAT', time:'6:09 PM', net:'TBS',  seed1:2,  team1:'UConn',         seed2:3,  team2:'Illinois'},
+  {day:'SAT', time:'8:49 PM', net:'TBS',  seed1:1,  team1:'Arizona',       seed2:1,  team2:'Michigan'},
 ];
 
 // ── E8 CONFIG ────────────────────────────────────────────────
 const E8_PICKS_REVEALED = true; // flip to true to show logos instead of locks
 
 // ── F4 CONFIG ────────────────────────────────────────────────
-const F4_PICKS_REVEALED = false; // flip to true to show logos instead of locks
+const F4_PICKS_REVEALED = true; // flip to true to show logos instead of locks
 
 // ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
@@ -593,6 +598,7 @@ let allParticipants = [];
 let teamPickers = {};
 let r32TeamPickers = {};
 let s16TeamPickers = {};
+let e8TeamPickers = {};
 
 // ── PAID LIST (update daily) ──────────────────────────────────
 const paidList = new Set([
@@ -602,7 +608,7 @@ const VENMO_HANDLE = '@Troy-Rooney-1';
 
 // Normalize team names from sheet to match schedule
 const teamNameMap = {};
-[r64Schedule, r32Schedule, s16Schedule, schedule].forEach(sched => {
+[r64Schedule, r32Schedule, s16Schedule, e8Schedule, schedule].forEach(sched => {
   sched.forEach(g => {
     teamNameMap[g.team1.toLowerCase()] = g.team1;
     teamNameMap[g.team1.toLowerCase().replace(/[.']/g, '')] = g.team1;
@@ -656,13 +662,23 @@ function buildFromData(participants, r32picks, s16picks, e8picks, f4picks, paid)
   paidList.clear();
   paid.forEach(name => { if (name) paidList.add(name); });
 
-  // Rebuild teamPickers from E8 picks (active round)
-  teamPickers = {};
+  // Rebuild e8TeamPickers for terminators
+  e8TeamPickers = {};
   allParticipants.forEach(name => {
     (e8PicksMap[name] || []).forEach(t => {
+      if (!e8TeamPickers[t]) e8TeamPickers[t] = [];
+      e8TeamPickers[t].push(name);
+    });
+  });
+
+  // Rebuild teamPickers from F4 picks (active round)
+  teamPickers = {};
+  allParticipants.forEach(name => {
+    const [t] = f4PicksMap[name] || [];
+    if (t && t !== 'Out') {
       if (!teamPickers[t]) teamPickers[t] = [];
       teamPickers[t].push(name);
-    });
+    }
   });
 
   // Also build r32TeamPickers for terminators
@@ -741,13 +757,13 @@ function render() {
     return cards;
   }
 
-  // Build set of participants who have any loss (R64, R32, S16, or E8)
+  // Build set of participants who have any loss (R64, R32, S16, E8, or F4)
   const elimSet = new Set();
   const wonSet = new Set();
   allParticipants.forEach(name => {
     if (isEliminated(name)) { elimSet.add(name); return; }
-    const [e8t] = e8PicksMap[name] || [];
-    if (e8t && results[e8t] === 'won') wonSet.add(name);
+    const [f4t] = f4PicksMap[name] || [];
+    if (f4t && f4t !== 'Out' && results[f4t] === 'won') wonSet.add(name);
   });
 
   function chipClass(name) {
@@ -757,7 +773,6 @@ function render() {
   }
 
   const sat = buildCards('SAT');
-  const sun = buildCards('SUN');
 
   // Sort: completed games to the end
   function sortCards(cards) {
@@ -768,7 +783,6 @@ function render() {
     });
   }
   sortCards(sat);
-  sortCards(sun);
 
   let html = '';
   let idx = 0;
@@ -808,10 +822,10 @@ function render() {
     html += '</div>';
   }
 
-  // Not picked yet banner — alive participants without an E8 pick
+  // Not picked yet banner — alive participants without an F4 pick
   const notPicked = allParticipants.filter(n => {
     if (isEliminated(n)) return false;
-    const [t] = e8PicksMap[n] || [];
+    const [t] = f4PicksMap[n] || [];
     return !t;
   });
   let bannerHtml = '';
@@ -821,25 +835,22 @@ function render() {
     <div style="max-width:1400px;margin:0 auto;padding:0 20px 16px;">
       <div style="background:#0f1f3d;border:1px solid rgba(239,180,0,0.25);border-radius:8px;padding:12px 16px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f0b400;margin-bottom:8px;">
-          E8 Picks Not Yet Submitted (${notPicked.length})
+          F4 Picks Not Yet Submitted (${notPicked.length})
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
       </div>
     </div>`;
   }
 
-  renderGroup(sat, 'Saturday, March 28');
-  renderGroup(sun, 'Sunday, March 29');
+  renderGroup(sat, 'Saturday, April 4');
 
   document.getElementById('app').innerHTML = bannerHtml + html;
 
   const aliveCount = allParticipants.filter(n => !elimSet.has(n)).length;
   const elimCount = elimSet.size;
-  const pickedF4 = allParticipants.filter(n => !isEliminated(n) && (f4PicksMap[n] || [])[0]).length;
   document.getElementById('stats').innerHTML = `
     <div>Participants: <span>${allParticipants.length}</span></div>
     <div>Paid: <span>${paidList.size}</span></div>
-    <div>F4 Picked: <span>${pickedF4}</span></div>
     <div>Alive: <span style="color:#22c55e;">${aliveCount}</span></div>
     <div>Eliminated: <span style="color:#ef4444;">${elimCount}</span></div>`;
 }
@@ -850,20 +861,20 @@ const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABD
 // Save completed results to localStorage so they survive ESPN API day-rotation
 function saveResults() {
   try {
-    localStorage.setItem('sp_e8_results', JSON.stringify(results));
-    localStorage.setItem('sp_e8_gameScores', JSON.stringify(gameScores));
+    localStorage.setItem('sp_f4_results', JSON.stringify(results));
+    localStorage.setItem('sp_f4_gameScores', JSON.stringify(gameScores));
   } catch(e) {}
 }
 function loadSavedResults() {
   try {
-    // Only load results for teams in our E8 schedule
-    const e8Teams = new Set();
-    schedule.forEach(g => { e8Teams.add(g.team1); e8Teams.add(g.team2); });
-    const saved = JSON.parse(localStorage.getItem('sp_e8_results') || '{}');
-    const savedScores = JSON.parse(localStorage.getItem('sp_e8_gameScores') || '{}');
-    Object.keys(saved).forEach(k => { if (e8Teams.has(k) && !results[k]) results[k] = saved[k]; });
+    // Only load results for teams in our F4 schedule
+    const f4Teams = new Set();
+    schedule.forEach(g => { f4Teams.add(g.team1); f4Teams.add(g.team2); });
+    const saved = JSON.parse(localStorage.getItem('sp_f4_results') || '{}');
+    const savedScores = JSON.parse(localStorage.getItem('sp_f4_gameScores') || '{}');
+    Object.keys(saved).forEach(k => { if (f4Teams.has(k) && !results[k]) results[k] = saved[k]; });
     Object.keys(savedScores).forEach(k => {
-      if (!e8Teams.has(k)) return;
+      if (!f4Teams.has(k)) return;
       if (!gameScores[k] || gameScores[k].state !== 'post') {
         if (savedScores[k]?.state === 'post') gameScores[k] = savedScores[k];
       }
@@ -960,13 +971,13 @@ const s16Scores = {
 };
 
 // ── E8 RESULTS & SCORES (frozen) ────────────────────────────
-const results = {
+const e8Results = {
   'Illinois': 'won', 'Iowa': 'lost',
   'Arizona': 'won', 'Purdue': 'lost',
   'Michigan': 'won', 'Tennessee': 'lost',
   'UConn': 'won', 'Duke': 'lost',
 };
-const gameScores = {
+const e8Scores = {
   'Illinois': { score1:71, score2:59, state:'post', clock:'0:00', period:'2H' },
   'Iowa': { score1:59, score2:71, state:'post', clock:'0:00', period:'2H' },
   'Arizona': { score1:79, score2:64, state:'post', clock:'0:00', period:'2H' },
@@ -976,6 +987,10 @@ const gameScores = {
   'UConn': { score1:73, score2:72, state:'post', clock:'0:00', period:'2H' },
   'Duke': { score1:72, score2:73, state:'post', clock:'0:00', period:'2H' },
 };
+
+// ── F4 RESULTS & SCORES (active) ────────────────────────────
+const results = {};
+const gameScores = {};
 
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(id, btn) {
@@ -1091,7 +1106,37 @@ function renderTerminators() {
     }
   });
 
-  // E8 kills (live)
+  // E8 kills (frozen)
+  e8Schedule.forEach(g => {
+    if (e8Results[g.team1] === 'won' && typeof g.seed2 === 'number') {
+      const victims = e8TeamPickers[g.team2] || [];
+      if (victims.length > 0) {
+        const s = e8Scores[g.team1];
+        gameWins.push({
+          team: g.team1, seed: g.seed1,
+          loser: g.team2, loserSeed: g.seed2,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Elite 8',
+          victims,
+        });
+      }
+    }
+    if (typeof g.seed2 === 'number' && e8Results[g.team2] === 'won') {
+      const victims = e8TeamPickers[g.team1] || [];
+      if (victims.length > 0) {
+        const s = e8Scores[g.team2];
+        gameWins.push({
+          team: g.team2, seed: g.seed2,
+          loser: g.team1, loserSeed: g.seed1,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Elite 8',
+          victims,
+        });
+      }
+    }
+  });
+
+  // F4 kills (live)
   schedule.forEach(g => {
     if (results[g.team1] === 'won' && typeof g.seed2 === 'number') {
       const victims = teamPickers[g.team2] || [];
@@ -1101,7 +1146,7 @@ function renderTerminators() {
           team: g.team1, seed: g.seed1,
           loser: g.team2, loserSeed: g.seed2,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Elite 8',
+          kills: victims.length, round: 'Final Four',
           victims,
         });
       }
@@ -1114,7 +1159,7 @@ function renderTerminators() {
           team: g.team2, seed: g.seed2,
           loser: g.team1, loserSeed: g.seed1,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Elite 8',
+          kills: victims.length, round: 'Final Four',
           victims,
         });
       }
@@ -1237,15 +1282,13 @@ function renderParticipants() {
       s16State = 'nopick';
     }
 
-    // E8 pick state (active)
+    // E8 pick state (frozen)
     const [e8t] = e8PicksMap[name] || [''];
-    const e8r = results[e8t] || null;
+    const e8r = e8Results[e8t] || null;
     let e8State;
     if (elim) {
       e8State = 'elim';
-    } else if (e8t && !E8_PICKS_REVEALED) {
-      e8State = 's16-locked';
-    } else if (e8t && E8_PICKS_REVEALED) {
+    } else if (e8t) {
       e8State = pickState(e8t, e8r);
     } else {
       e8State = 'nopick';
@@ -1253,6 +1296,7 @@ function renderParticipants() {
 
     // F4 pick state (active round)
     const [f4t] = f4PicksMap[name] || [''];
+    const f4r = results[f4t] || null;
     let f4State, chmpState;
     if (elim) {
       f4State = 'elim';
@@ -1264,7 +1308,7 @@ function renderParticipants() {
       f4State = 's16-locked';
       chmpState = 'locked';
     } else if (f4t && F4_PICKS_REVEALED) {
-      f4State = pickState(f4t, null);
+      f4State = pickState(f4t, f4r);
       chmpState = 'locked';
     } else {
       f4State = 'locked';
@@ -1282,8 +1326,8 @@ function renderParticipants() {
         ${makeCircle(r32t, r32State, 'R32', true)}
         ${makeCircle(s16t, s16State, 'S16', true)}
         ${makeCircle(e8t, e8State, 'E8', E8_PICKS_REVEALED)}
-        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle(f4t === 'Out' ? '' : f4t, f4State, 'F4', F4_PICKS_REVEALED)}
+        <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
         ${makeCircle('', chmpState, 'CHMP', false)}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
@@ -1305,7 +1349,9 @@ function isEliminated(name) {
   const s16 = s16PicksMap[name] || [];
   if (s16.some(t => s16Results[t] === 'lost')) return true;
   const e8 = e8PicksMap[name] || [];
-  if (e8.some(t => results[t] === 'lost')) return true;
+  if (e8.some(t => e8Results[t] === 'lost')) return true;
+  const f4 = f4PicksMap[name] || [];
+  if (f4.some(t => t !== 'Out' && results[t] === 'lost')) return true;
   return false;
 }
 
@@ -1502,12 +1548,12 @@ async function fetchScores(manual = false) {
         };
       });
 
-      // Only process teams in our E8 schedule
-      const e8Teams = new Set();
-      schedule.forEach(g => { e8Teams.add(g.team1); e8Teams.add(g.team2); });
+      // Only process teams in our F4 schedule
+      const f4Teams = new Set();
+      schedule.forEach(g => { f4Teams.add(g.team1); f4Teams.add(g.team2); });
 
       mapped.forEach((m, i) => {
-        if (!m.name || !e8Teams.has(m.name)) return;
+        if (!m.name || !f4Teams.has(m.name)) return;
         const oppScore = mapped[1 - i]?.score || 0;
         const prev = JSON.stringify(gameScores[m.name]);
         gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
