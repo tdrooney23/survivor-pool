@@ -1665,40 +1665,40 @@ function renderParticipants() {
     else if (r32t) r32State = pickState(r32t, r32r);
     else r32State = 'nopick';
 
-    // S16 pick state (frozen)
+    // S16 pick state (frozen) — show actual result even if eliminated later
     const [s16t] = s16PicksMap[name] || [''];
     const s16r = s16Results[s16t] || null;
     let s16State;
-    if (elim) {
-      s16State = 'elim';
-    } else if (s16t) {
+    if (s16t) {
       s16State = pickState(s16t, s16r);
+    } else if (elim || !alive) {
+      s16State = 'elim';
     } else {
       s16State = 'nopick';
     }
 
-    // E8 pick state (frozen)
+    // E8 pick state (frozen) — show actual result even if eliminated later
     const [e8t] = e8PicksMap[name] || [''];
     const e8r = e8Results[e8t] || null;
     let e8State;
-    if (elim) {
-      e8State = 'elim';
-    } else if (e8t) {
+    if (e8t) {
       e8State = pickState(e8t, e8r);
+    } else if (elim) {
+      e8State = 'elim';
     } else {
       e8State = 'nopick';
     }
 
-    // F4 pick state (frozen)
+    // F4 pick state (frozen) — show actual result even if eliminated later
     const [f4t] = f4PicksMap[name] || [''];
     const f4r = f4Results[f4t] || null;
     let f4State;
-    if (elim) {
-      f4State = 'elim';
-    } else if (f4t === 'Out') {
+    if (f4t === 'Out') {
       f4State = 'out';
     } else if (f4t) {
       f4State = pickState(f4t, f4r);
+    } else if (elim) {
+      f4State = 'elim';
     } else {
       f4State = 'nopick';
     }
@@ -1707,14 +1707,14 @@ function renderParticipants() {
     const [chmpt] = chmpPicksMap[name] || [''];
     const chmpr = results[chmpt] || null;
     let chmpState;
-    if (elim) {
-      chmpState = 'elim';
-    } else if (chmpt === 'Out') {
+    if (chmpt === 'Out') {
       chmpState = 'out';
     } else if (chmpt && !CHMP_PICKS_REVEALED) {
       chmpState = 's16-locked';
     } else if (chmpt && CHMP_PICKS_REVEALED) {
       chmpState = pickState(chmpt, chmpr);
+    } else if (elim) {
+      chmpState = 'elim';
     } else {
       chmpState = 'locked';
     }
