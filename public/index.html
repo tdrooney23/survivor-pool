@@ -334,6 +334,105 @@
     .f4-title { font-size:24px; letter-spacing:2px; }
   }
 
+  /* ── CHAMPIONSHIP LEADERBOARD ── */
+  .chmp-scoreboard {
+    max-width:600px; margin:0 auto 16px; padding:16px 20px;
+    background:var(--dark-card); border:1px solid var(--card-border);
+    border-radius:12px; text-align:center;
+  }
+  .chmp-score-teams {
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    margin-bottom:6px;
+  }
+  .chmp-score-team {
+    display:flex; align-items:center; gap:8px;
+  }
+  .chmp-score-team img { width:36px; height:36px; object-fit:contain; }
+  .chmp-score-num {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:32px; font-weight:900; color:#fff;
+  }
+  .chmp-score-dash {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:24px; font-weight:700; color:#475569;
+  }
+  .chmp-score-meta {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:11px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; color:var(--gray);
+  }
+  .chmp-total-badge {
+    display:inline-block; margin-top:6px; padding:3px 14px;
+    border-radius:20px; border:1px solid #e85d26;
+    background:rgba(232,93,38,0.1);
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:13px; font-weight:800; letter-spacing:1px;
+    text-transform:uppercase; color:#e85d26;
+  }
+  .chmp-columns {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:16px; max-width:1400px; margin:0 auto; padding:0 20px 24px;
+  }
+  @media (max-width:700px) {
+    .chmp-columns { grid-template-columns:1fr; }
+  }
+  .chmp-col-header {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 16px; margin-bottom:8px;
+    background:var(--dark-card); border:1px solid var(--card-border);
+    border-radius:10px;
+  }
+  .chmp-col-header img { width:44px; height:44px; object-fit:contain; }
+  .chmp-col-team {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:20px; font-weight:900; text-transform:uppercase;
+    color:#fff; letter-spacing:0.5px; line-height:1.1;
+  }
+  .chmp-col-seed {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:10px; font-weight:700; color:#e85d26;
+    letter-spacing:1.5px; text-transform:uppercase;
+  }
+  .chmp-col-count {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:10px; font-weight:700; color:var(--gray);
+    letter-spacing:1px; text-transform:uppercase;
+  }
+  .chmp-row {
+    display:flex; align-items:center; gap:8px;
+    padding:8px 12px; margin-bottom:4px;
+    background:var(--dark-card); border:1px solid var(--card-border);
+    border-radius:8px; transition:all 0.4s ease;
+    animation:fadeUp 0.3s ease both;
+  }
+  .chmp-row.is-elim { opacity:0.4; }
+  .chmp-row-rank {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:14px; font-weight:800; color:#475569;
+    width:22px; text-align:center; flex-shrink:0;
+  }
+  .chmp-row-name {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:14px; font-weight:700; color:#fff;
+    flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .chmp-row-pts {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:14px; font-weight:800; color:#6fb3f5;
+    flex-shrink:0; text-align:right; min-width:32px;
+  }
+  .chmp-row-diff {
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:12px; font-weight:800; flex-shrink:0;
+    text-align:right; min-width:42px; letter-spacing:0.5px;
+    padding:2px 6px; border-radius:4px;
+  }
+  .chmp-row-diff.exact { color:#22c55e; background:rgba(34,197,94,0.12); }
+  .chmp-row-diff.close { color:#22c55e; background:rgba(34,197,94,0.08); }
+  .chmp-row-diff.mid   { color:#eab308; background:rgba(234,179,8,0.08); }
+  .chmp-row-diff.far   { color:#ef4444; background:rgba(239,68,68,0.08); }
+  .chmp-row-diff.na    { color:#475569; }
+
   /* ── LIVE BAR ── */
   .live-bar {
     display:flex; align-items:center; justify-content:center;
@@ -486,7 +585,7 @@
 <body>
 <header>
   <img class="mm-logo" id="mmlogo" alt="March Madness">
-  <div class="pool-title">2026 Survivor Pool &mdash; Final Four</div>
+  <div class="pool-title">2026 Survivor Pool &mdash; Championship</div>
 </header>
 <div id="loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;">
   <div style="font-size:48px;animation:bounce 0.6s ease infinite alternate;">🏀</div>
@@ -500,7 +599,7 @@
   <button class="refresh-btn" onclick="fetchScores(true)">↻ Refresh</button>
 </div>
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('games',this)">Final Four</button>
+  <button class="tab-btn active" onclick="switchTab('games',this)">Championship</button>
   <button class="tab-btn" onclick="switchTab('participants',this)">Participants</button>
   <button class="tab-btn" onclick="switchTab('terminators',this)">Top Terminators</button>
 </div>
@@ -721,10 +820,15 @@ const e8Schedule = [
   {day:'SUN', time:'5:05 PM', net:'CBS',  seed1:1,  team1:'Duke',          seed2:2,  team2:'UConn'},
 ];
 
-// ── F4 SCHEDULE (active round) ──────────────────────────────
-const schedule = [
+// ── F4 SCHEDULE (frozen) ────────────────────────────────────
+const f4Schedule = [
   {day:'SAT', time:'6:09 PM', net:'TBS',  seed1:2,  team1:'UConn',         seed2:3,  team2:'Illinois'},
   {day:'SAT', time:'8:49 PM', net:'TBS',  seed1:1,  team1:'Arizona',       seed2:1,  team2:'Michigan'},
+];
+
+// ── CHAMPIONSHIP SCHEDULE (active round) ────────────────────
+const schedule = [
+  {day:'MON', time:'8:50 PM', net:'TBS',  seed1:1,  team1:'Michigan',      seed2:2,  team2:'UConn'},
 ];
 
 // ── E8 CONFIG ────────────────────────────────────────────────
@@ -732,6 +836,9 @@ const E8_PICKS_REVEALED = true; // flip to true to show logos instead of locks
 
 // ── F4 CONFIG ────────────────────────────────────────────────
 const F4_PICKS_REVEALED = true; // flip to true to show logos instead of locks
+
+// ── CHAMPIONSHIP CONFIG ─────────────────────────────────────
+const CHMP_PICKS_REVEALED = false; // flip to true to show logos instead of locks
 
 // ── R32 PICKS (fallback) ─────────────────────────────────────
 const rawPicks = [
@@ -746,11 +853,14 @@ let picksMap = {};
 let s16PicksMap = {};
 let e8PicksMap = {};
 let f4PicksMap = {};
+let chmpPicksMap = {};
+let chmpTotalsMap = {};
 let allParticipants = [];
 let teamPickers = {};
 let r32TeamPickers = {};
 let s16TeamPickers = {};
 let e8TeamPickers = {};
+let f4TeamPickers = {};
 
 // ── PAID LIST (update daily) ──────────────────────────────────
 const paidList = new Set([
@@ -760,7 +870,7 @@ const VENMO_HANDLE = '@Troy-Rooney-1';
 
 // Normalize team names from sheet to match schedule
 const teamNameMap = {};
-[r64Schedule, r32Schedule, s16Schedule, e8Schedule, schedule].forEach(sched => {
+[r64Schedule, r32Schedule, s16Schedule, e8Schedule, f4Schedule, schedule].forEach(sched => {
   sched.forEach(g => {
     teamNameMap[g.team1.toLowerCase()] = g.team1;
     teamNameMap[g.team1.toLowerCase().replace(/[.']/g, '')] = g.team1;
@@ -783,7 +893,7 @@ function isAliveAfterR64(name) {
   return picks.every(t => r64Results[t] === 'won');
 }
 
-function buildFromData(participants, r32picks, s16picks, e8picks, f4picks, paid) {
+function buildFromData(participants, r32picks, s16picks, e8picks, f4picks, chmpPicks, chmpTotals, paid) {
   allParticipants = participants;
 
   // Build picksMap from R32 picks (1 pick per participant)
@@ -810,6 +920,18 @@ function buildFromData(participants, r32picks, s16picks, e8picks, f4picks, paid)
     if (n && t) f4PicksMap[n] = [/^out$/i.test(t.trim()) ? 'Out' : normalizeTeam(t)];
   });
 
+  // Build chmpPicksMap from Championship picks (1 pick per participant)
+  chmpPicksMap = {};
+  (chmpPicks || []).forEach(([n, t]) => {
+    if (n && t) chmpPicksMap[n] = [/^out$/i.test(t.trim()) ? 'Out' : normalizeTeam(t)];
+  });
+
+  // Build chmpTotalsMap from Championship total score predictions
+  chmpTotalsMap = {};
+  (chmpTotals || []).forEach(([n, total]) => {
+    if (n && total) chmpTotalsMap[n] = total;
+  });
+
   // Rebuild paidList from sheet
   paidList.clear();
   paid.forEach(name => { if (name) paidList.add(name); });
@@ -823,10 +945,20 @@ function buildFromData(participants, r32picks, s16picks, e8picks, f4picks, paid)
     });
   });
 
-  // Rebuild teamPickers from F4 picks (active round)
-  teamPickers = {};
+  // Rebuild f4TeamPickers for terminators (frozen)
+  f4TeamPickers = {};
   allParticipants.forEach(name => {
     const [t] = f4PicksMap[name] || [];
+    if (t && t !== 'Out') {
+      if (!f4TeamPickers[t]) f4TeamPickers[t] = [];
+      f4TeamPickers[t].push(name);
+    }
+  });
+
+  // Rebuild teamPickers from Championship picks (active round)
+  teamPickers = {};
+  allParticipants.forEach(name => {
+    const [t] = chmpPicksMap[name] || [];
     if (t && t !== 'Out') {
       if (!teamPickers[t]) teamPickers[t] = [];
       teamPickers[t].push(name);
@@ -854,7 +986,7 @@ function buildFromData(participants, r32picks, s16picks, e8picks, f4picks, paid)
 
 async function fetchSheetData() {
   if (!SHEET_URL) {
-    buildFromData(allParticipants, rawPicks, [], [], [], [], []);
+    buildFromData(allParticipants, rawPicks, [], [], [], [], [], [], []);
     return;
   }
   try {
@@ -866,13 +998,13 @@ async function fetchSheetData() {
         if (n && !r64Picks[n]) r64Picks[n] = [normalizeTeam(t1), normalizeTeam(t2)];
       });
     }
-    buildFromData(data.participants, data.r32picks || [], data.s16picks || [], data.e8picks || [], data.f4picks || [], data.paid);
+    buildFromData(data.participants, data.r32picks || [], data.s16picks || [], data.e8picks || [], data.f4picks || [], data.chmpPicks || [], data.chmpTotals || [], data.paid);
     render();
     renderParticipants();
     renderTerminators();
   } catch(err) {
     console.warn('Sheet fetch error, using hardcoded data:', err);
-    buildFromData(allParticipants, rawPicks, [], [], [], [], []);
+    buildFromData(allParticipants, rawPicks, [], [], [], [], [], [], []);
   }
   document.getElementById('loader').style.display = 'none';
   document.getElementById('main-content').style.display = 'block';
@@ -894,88 +1026,127 @@ function logoEl(team) {
 function render() {
   document.getElementById('mmlogo').src = LOGOS['__mm__'];
 
-  // Build set of participants who have any loss
   const elimSet = new Set();
-  const wonSet = new Set();
-  allParticipants.forEach(name => {
-    if (isEliminated(name)) { elimSet.add(name); return; }
-    const [f4t] = f4PicksMap[name] || [];
-    if (f4t && f4t !== 'Out' && results[f4t] === 'won') wonSet.add(name);
-  });
+  allParticipants.forEach(name => { if (isEliminated(name)) elimSet.add(name); });
 
-  function chipClass(name) {
-    if (elimSet.has(name)) return 'picker-chip chip-elim';
-    if (wonSet.has(name)) return 'picker-chip chip-won';
-    return 'picker-chip';
+  const g = schedule[0]; // Michigan vs UConn
+  const team1 = g.team1; // Michigan (right)
+  const team2 = g.team2; // UConn (left)
+
+  // Live total score
+  const sc = gameScores[team1] || gameScores[team2];
+  const t1Score = sc ? sc.score1 : 0;
+  const t2Score = sc ? sc.score2 : 0;
+  const actualTotal = sc ? (sc.score1 + sc.score2) : 0;
+  const gameState = sc?.state || 'pre';
+  const gameClock = sc?.clock || '';
+  const gamePeriod = sc?.period || '';
+  // For display: get each team's own score
+  const mScore = gameScores[team1]?.score1 ?? 0;
+  const uScore = gameScores[team2]?.score1 ?? 0;
+
+  // Build sorted leaderboard for a team's pickers
+  function buildLeaderboard(team) {
+    const pickers = teamPickers[team] || [];
+    return pickers.map(name => {
+      const predicted = parseInt(chmpTotalsMap[name]) || 0;
+      const elim = elimSet.has(name);
+      const diff = gameState !== 'pre' ? (predicted - actualTotal) : null;
+      const absDiff = diff !== null ? Math.abs(diff) : Infinity;
+      return { name, predicted, diff, absDiff, elim };
+    }).sort((a, b) => {
+      if (a.elim !== b.elim) return a.elim ? 1 : -1;
+      if (a.absDiff !== b.absDiff) return a.absDiff - b.absDiff;
+      return a.predicted - b.predicted; // tiebreaker: lower prediction wins
+    });
   }
 
-  // Helper: build a bracket team card
-  function teamCard(team, seed, oppTeam, oppSeed, time, net, delay) {
-    const pickers = teamPickers[team] || [];
-    const chips = pickers.map(p => `<span class="${chipClass(p)}">${p}</span>`).join('');
-    const r = results[team];
-    const cardClass = r === 'won' ? 'card-won' : r === 'lost' ? 'card-lost' : '';
+  function diffBadge(diff) {
+    if (diff === null) return '<span class="chmp-row-diff na">—</span>';
+    const abs = Math.abs(diff);
+    const sign = diff > 0 ? '+' : diff < 0 ? '' : '';
+    const cls = abs === 0 ? 'exact' : abs <= 5 ? 'close' : abs <= 15 ? 'mid' : 'far';
+    const label = abs === 0 ? 'EXACT' : `${sign}${diff}`;
+    return `<span class="chmp-row-diff ${cls}">${label}</span>`;
+  }
+
+  function teamColumn(team, seed) {
     const logoSrc = LOGOS[team];
-    const logoHtml = logoSrc
-      ? `<img class="bracket-team-logo" src="${logoSrc}" alt="${team}">`
-      : `<div class="bracket-team-logo" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.07);border-radius:50%;font-weight:800;color:#fff;font-size:12px;">${team}</div>`;
+    const logoHtml = logoSrc ? `<img src="${logoSrc}" alt="${team}">` : '';
+    const r = results[team];
+    const borderStyle = r === 'won' ? 'border-color:#22c55e;' : r === 'lost' ? 'border-color:#ef4444;opacity:0.7;' : '';
+    const rows = buildLeaderboard(team);
+    const pickerCount = rows.filter(r => !r.elim).length;
+
+    const rowsHtml = CHMP_PICKS_REVEALED
+      ? rows.map((p, i) => `
+        <div class="chmp-row${p.elim ? ' is-elim' : ''}" style="animation-delay:${i * 30}ms">
+          <div class="chmp-row-rank">${i + 1}</div>
+          <div class="chmp-row-name">${p.name}</div>
+          <div class="chmp-row-pts">${p.predicted}</div>
+          ${diffBadge(p.diff)}
+        </div>`).join('')
+      : rows.map((p, i) => `
+        <div class="chmp-row${p.elim ? ' is-elim' : ''}" style="animation-delay:${i * 30}ms">
+          <div class="chmp-row-rank">${i + 1}</div>
+          <div class="chmp-row-name">${p.name}</div>
+          <div class="chmp-row-pts"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        </div>`).join('');
 
     return `
-    <div class="bracket-team ${cardClass}" data-team="${team}" style="animation-delay:${delay}ms">
-      <div class="bracket-team-header">
+    <div>
+      <div class="chmp-col-header" style="${borderStyle}">
         ${logoHtml}
-        <div class="bracket-team-info">
-          <div class="bracket-team-seed">${seed} Seed</div>
-          <div class="bracket-team-name">${team}</div>
-          <div class="bracket-team-meta">
-            <span class="vs-label">VS</span> (${oppSeed}) ${oppTeam}
-            <span class="score-area" data-team="${team}">${scoreHTML(team)}</span>
-          </div>
+        <div>
+          <div class="chmp-col-seed">${seed} Seed</div>
+          <div class="chmp-col-team">${team}</div>
+          <div class="chmp-col-count">${pickerCount} picker${pickerCount !== 1 ? 's' : ''}</div>
         </div>
       </div>
-      <div class="bracket-team-meta" style="justify-content:flex-end;margin-top:6px;">
-        <span style="color:var(--gray);">${time}</span>
-        <span class="network-badge ${netClass(net)}">${net}</span>
-      </div>
-      <div class="bracket-pickers">
-        <div class="pickers-label" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gray);text-transform:uppercase;margin-bottom:5px;">
-          Picked by (${pickers.length})
-        </div>
-        <div class="picker-chips">${chips}</div>
-      </div>
+      ${rowsHtml}
     </div>`;
   }
 
-  // Game 1: UConn vs Illinois (left side)
-  const g1 = schedule[0];
-  // Game 2: Arizona vs Michigan (right side)
-  const g2 = schedule[1];
+  // Score bar
+  const logo1 = LOGOS[team2] ? `<img src="${LOGOS[team2]}" alt="${team2}" style="width:36px;height:36px;object-fit:contain;">` : '';
+  const logo2 = LOGOS[team1] ? `<img src="${LOGOS[team1]}" alt="${team1}" style="width:36px;height:36px;object-fit:contain;">` : '';
+
+  let scoreMeta = '';
+  if (gameState === 'pre') {
+    scoreMeta = `<div class="chmp-score-meta">${g.time} &middot; ${g.net}</div>`;
+  } else if (gameState === 'in') {
+    scoreMeta = `<div class="chmp-score-meta">${gameClock} ${gamePeriod}</div>
+      <div class="chmp-total-badge">Combined Total: ${actualTotal}</div>`;
+  } else if (gameState === 'post') {
+    scoreMeta = `<div class="chmp-score-meta">FINAL</div>
+      <div class="chmp-total-badge">Final Total: ${actualTotal}</div>`;
+  }
+
+  const scoreBar = `
+    <div class="chmp-scoreboard">
+      <div class="chmp-score-teams">
+        <div class="chmp-score-team">${logo1}
+          <div class="chmp-score-num">${gameState === 'pre' ? '—' : uScore}</div>
+        </div>
+        <div class="chmp-score-dash">—</div>
+        <div class="chmp-score-team">
+          <div class="chmp-score-num">${gameState === 'pre' ? '—' : mScore}</div>
+          ${logo2}
+        </div>
+      </div>
+      ${scoreMeta}
+    </div>`;
 
   const html = `
   <div class="f4-header">
-    <div class="f4-title">Final Four</div>
-    <div class="f4-subtitle">Indianapolis &middot; Saturday, April 4</div>
+    <div class="f4-title">National Championship</div>
+    <div class="f4-subtitle">Indianapolis &middot; Monday, April 6</div>
     <div class="f4-divider"></div>
   </div>
-  <div class="bracket-wrap">
-    <div class="bracket">
-      <div class="bracket-side left">
-        <div class="bracket-game-label">Game 1 &middot; ${g1.time}</div>
-        ${teamCard(g1.team1, g1.seed1, g1.team2, g1.seed2, g1.time, g1.net, 0)}
-        ${teamCard(g1.team2, g1.seed2, g1.team1, g1.seed1, g1.time, g1.net, 50)}
-      </div>
-      <div class="bracket-center">
-        <div class="bracket-hub">
-          <div class="bracket-hub-icon">🏆</div>
-          <div class="bracket-hub-label">Apr 7</div>
-        </div>
-      </div>
-      <div class="bracket-side right">
-        <div class="bracket-game-label">Game 2 &middot; ${g2.time}</div>
-        ${teamCard(g2.team1, g2.seed1, g2.team2, g2.seed2, g2.time, g2.net, 100)}
-        ${teamCard(g2.team2, g2.seed2, g2.team1, g2.seed1, g2.time, g2.net, 150)}
-      </div>
-    </div>
+  ${scoreBar}
+  <div class="chmp-columns">
+    ${teamColumn(team2, g.seed2)}
+    ${teamColumn(team1, g.seed1)}
   </div>`;
 
   document.getElementById('app').innerHTML = html;
@@ -995,20 +1166,20 @@ const VENMO_QR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABD
 // Save completed results to localStorage so they survive ESPN API day-rotation
 function saveResults() {
   try {
-    localStorage.setItem('sp_f4_results', JSON.stringify(results));
-    localStorage.setItem('sp_f4_gameScores', JSON.stringify(gameScores));
+    localStorage.setItem('sp_chmp_results', JSON.stringify(results));
+    localStorage.setItem('sp_chmp_gameScores', JSON.stringify(gameScores));
   } catch(e) {}
 }
 function loadSavedResults() {
   try {
-    // Only load results for teams in our F4 schedule
-    const f4Teams = new Set();
-    schedule.forEach(g => { f4Teams.add(g.team1); f4Teams.add(g.team2); });
-    const saved = JSON.parse(localStorage.getItem('sp_f4_results') || '{}');
-    const savedScores = JSON.parse(localStorage.getItem('sp_f4_gameScores') || '{}');
-    Object.keys(saved).forEach(k => { if (f4Teams.has(k) && !results[k]) results[k] = saved[k]; });
+    // Only load results for teams in our Championship schedule
+    const chmpTeams = new Set();
+    schedule.forEach(g => { chmpTeams.add(g.team1); chmpTeams.add(g.team2); });
+    const saved = JSON.parse(localStorage.getItem('sp_chmp_results') || '{}');
+    const savedScores = JSON.parse(localStorage.getItem('sp_chmp_gameScores') || '{}');
+    Object.keys(saved).forEach(k => { if (chmpTeams.has(k) && !results[k]) results[k] = saved[k]; });
     Object.keys(savedScores).forEach(k => {
-      if (!f4Teams.has(k)) return;
+      if (!chmpTeams.has(k)) return;
       if (!gameScores[k] || gameScores[k].state !== 'post') {
         if (savedScores[k]?.state === 'post') gameScores[k] = savedScores[k];
       }
@@ -1122,7 +1293,19 @@ const e8Scores = {
   'Duke': { score1:72, score2:73, state:'post', clock:'0:00', period:'2H' },
 };
 
-// ── F4 RESULTS & SCORES (active) ────────────────────────────
+// ── F4 RESULTS & SCORES (frozen) ────────────────────────────
+const f4Results = {
+  'UConn': 'won', 'Illinois': 'lost',
+  'Michigan': 'won', 'Arizona': 'lost',
+};
+const f4Scores = {
+  'UConn': { score1:71, score2:62, state:'post', clock:'0:00', period:'2H' },
+  'Illinois': { score1:62, score2:71, state:'post', clock:'0:00', period:'2H' },
+  'Michigan': { score1:91, score2:73, state:'post', clock:'0:00', period:'2H' },
+  'Arizona': { score1:73, score2:91, state:'post', clock:'0:00', period:'2H' },
+};
+
+// ── CHAMPIONSHIP RESULTS & SCORES (active) ──────────────────
 const results = {};
 const gameScores = {};
 
@@ -1270,7 +1453,37 @@ function renderTerminators() {
     }
   });
 
-  // F4 kills (live)
+  // F4 kills (frozen)
+  f4Schedule.forEach(g => {
+    if (f4Results[g.team1] === 'won' && typeof g.seed2 === 'number') {
+      const victims = f4TeamPickers[g.team2] || [];
+      if (victims.length > 0) {
+        const s = f4Scores[g.team1];
+        gameWins.push({
+          team: g.team1, seed: g.seed1,
+          loser: g.team2, loserSeed: g.seed2,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Final Four',
+          victims,
+        });
+      }
+    }
+    if (typeof g.seed2 === 'number' && f4Results[g.team2] === 'won') {
+      const victims = f4TeamPickers[g.team1] || [];
+      if (victims.length > 0) {
+        const s = f4Scores[g.team2];
+        gameWins.push({
+          team: g.team2, seed: g.seed2,
+          loser: g.team1, loserSeed: g.seed1,
+          score: s ? `${s.score1}–${s.score2}` : '',
+          kills: victims.length, round: 'Final Four',
+          victims,
+        });
+      }
+    }
+  });
+
+  // Championship kills (live)
   schedule.forEach(g => {
     if (results[g.team1] === 'won' && typeof g.seed2 === 'number') {
       const victims = teamPickers[g.team2] || [];
@@ -1280,7 +1493,7 @@ function renderTerminators() {
           team: g.team1, seed: g.seed1,
           loser: g.team2, loserSeed: g.seed2,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Final Four',
+          kills: victims.length, round: 'Championship',
           victims,
         });
       }
@@ -1293,7 +1506,7 @@ function renderTerminators() {
           team: g.team2, seed: g.seed2,
           loser: g.team1, loserSeed: g.seed1,
           score: s ? `${s.score1}–${s.score2}` : '',
-          kills: victims.length, round: 'Final Four',
+          kills: victims.length, round: 'Championship',
           victims,
         });
       }
@@ -1428,24 +1641,33 @@ function renderParticipants() {
       e8State = 'nopick';
     }
 
-    // F4 pick state (active round)
+    // F4 pick state (frozen)
     const [f4t] = f4PicksMap[name] || [''];
-    const f4r = results[f4t] || null;
-    let f4State, chmpState;
+    const f4r = f4Results[f4t] || null;
+    let f4State;
     if (elim) {
       f4State = 'elim';
-      chmpState = 'elim';
     } else if (f4t === 'Out') {
       f4State = 'out';
-      chmpState = 'out';
-    } else if (f4t && !F4_PICKS_REVEALED) {
-      f4State = 's16-locked';
-      chmpState = 'locked';
-    } else if (f4t && F4_PICKS_REVEALED) {
+    } else if (f4t) {
       f4State = pickState(f4t, f4r);
-      chmpState = 'locked';
     } else {
-      f4State = 'locked';
+      f4State = 'nopick';
+    }
+
+    // Championship pick state (active round)
+    const [chmpt] = chmpPicksMap[name] || [''];
+    const chmpr = results[chmpt] || null;
+    let chmpState;
+    if (elim) {
+      chmpState = 'elim';
+    } else if (chmpt === 'Out') {
+      chmpState = 'out';
+    } else if (chmpt && !CHMP_PICKS_REVEALED) {
+      chmpState = 's16-locked';
+    } else if (chmpt && CHMP_PICKS_REVEALED) {
+      chmpState = pickState(chmpt, chmpr);
+    } else {
       chmpState = 'locked';
     }
 
@@ -1462,7 +1684,22 @@ function renderParticipants() {
         ${makeCircle(e8t, e8State, 'E8', E8_PICKS_REVEALED)}
         ${makeCircle(f4t === 'Out' ? '' : f4t, f4State, 'F4', F4_PICKS_REVEALED)}
         <div style="width:1px;height:38px;background:#1e2d45;margin:0 2px;flex-shrink:0;"></div>
-        ${makeCircle('', chmpState, 'CHMP', false)}
+        ${makeCircle(chmpt === 'Out' ? '' : chmpt, chmpState, 'CHMP', CHMP_PICKS_REVEALED)}
+        ${(() => {
+          const total = chmpTotalsMap[name];
+          const showTotal = !elim && total;
+          if (!showTotal) return '';
+          const revealed = CHMP_PICKS_REVEALED;
+          const border = revealed ? '1px solid #1e3a6e' : '1px solid #1e3a6e';
+          const bg = revealed ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.015)';
+          const inner = revealed
+            ? '<span style="font-size:13px;font-weight:800;color:#6fb3f5;">' + total + '</span>'
+            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+          const labelColor = revealed ? '#6fb3f5' : '#1e2d45';
+          return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">' +
+            '<div style="width:38px;height:38px;border-radius:8px;border:' + border + ';background:' + bg + ';display:flex;align-items:center;justify-content:center;">' + inner + '</div>' +
+            '<div style="font-size:8px;font-weight:700;color:' + labelColor + ';letter-spacing:0.5px;text-transform:uppercase;">PTS</div></div>';
+        })()}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
         <div class="participant-status">
@@ -1486,7 +1723,10 @@ function isEliminated(name) {
   if (e8.some(t => e8Results[t] === 'lost')) return true;
   const f4 = f4PicksMap[name] || [];
   if (f4.some(t => t === 'Out')) return true;
-  if (f4.some(t => results[t] === 'lost')) return true;
+  if (f4.some(t => f4Results[t] === 'lost')) return true;
+  const chmp = chmpPicksMap[name] || [];
+  if (chmp.some(t => t === 'Out')) return true;
+  if (chmp.some(t => results[t] === 'lost')) return true;
   return false;
 }
 
@@ -1683,12 +1923,12 @@ async function fetchScores(manual = false) {
         };
       });
 
-      // Only process teams in our F4 schedule
-      const f4Teams = new Set();
-      schedule.forEach(g => { f4Teams.add(g.team1); f4Teams.add(g.team2); });
+      // Only process teams in our Championship schedule
+      const chmpTeams = new Set();
+      schedule.forEach(g => { chmpTeams.add(g.team1); chmpTeams.add(g.team2); });
 
       mapped.forEach((m, i) => {
-        if (!m.name || !f4Teams.has(m.name)) return;
+        if (!m.name || !chmpTeams.has(m.name)) return;
         const oppScore = mapped[1 - i]?.score || 0;
         const prev = JSON.stringify(gameScores[m.name]);
         gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
@@ -1721,9 +1961,9 @@ async function fetchScores(manual = false) {
       renderParticipants();
       renderTerminators();
     } else if (scoresChanged) {
-      // Just score/clock updates — patch in place, no flicker
+      // Score/clock updates — re-render to re-sort leaderboard by total distance
       saveResults();
-      updateScoresInPlace();
+      render();
     }
   } catch(err) {
     setLiveStatus('error', 'Could not reach ESPN — will retry');
@@ -1754,11 +1994,11 @@ function copyHandle() {
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
-// One-time cache bust: clear stale E8 localStorage for F4 transition
-if (!localStorage.getItem('sp_f4_v1')) {
-  localStorage.removeItem('sp_e8_results');
-  localStorage.removeItem('sp_e8_gameScores');
-  localStorage.setItem('sp_f4_v1', '1');
+// One-time cache bust: clear stale F4 localStorage for Championship transition
+if (!localStorage.getItem('sp_chmp_v1')) {
+  localStorage.removeItem('sp_f4_results');
+  localStorage.removeItem('sp_f4_gameScores');
+  localStorage.setItem('sp_chmp_v1', '1');
 }
 loadSavedResults();
 render();

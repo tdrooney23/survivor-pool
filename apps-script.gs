@@ -9,6 +9,8 @@ function doGet(e) {
     const s16picks = [];
     const e8picks = [];
     const f4picks = [];
+    const chmpPicks = [];
+    const chmpTotals = [];
     const paid = [];
     for (let i = 1; i < data.length; i++) {
       const name   = String(data[i][0] || '').trim();
@@ -19,6 +21,8 @@ function doGet(e) {
       const s16pick = String(data[i][6] || '').trim();
       const e8pick  = String(data[i][7] || '').trim();
       const f4pick  = String(data[i][8] || '').trim();
+      const chmpPick  = String(data[i][9] || '').trim();
+      const chmpTotal = String(data[i][10] || '').trim();
       if (!name) continue;
       participants.push(name);
       picks.push([name, pick1, pick2]);
@@ -26,14 +30,16 @@ function doGet(e) {
       if (s16pick) s16picks.push([name, s16pick]);
       if (e8pick) e8picks.push([name, e8pick]);
       if (f4pick) f4picks.push([name, f4pick]);
+      if (chmpPick) chmpPicks.push([name, chmpPick]);
+      if (chmpTotal) chmpTotals.push([name, chmpTotal]);
       if (isPaid) paid.push(name);
     }
     return ContentService
-      .createTextOutput(JSON.stringify({ participants, picks, r32picks, s16picks, e8picks, f4picks, paid }))
+      .createTextOutput(JSON.stringify({ participants, picks, r32picks, s16picks, e8picks, f4picks, chmpPicks, chmpTotals, paid }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
     return ContentService
-      .createTextOutput(JSON.stringify({ error: err.toString(), participants: [], picks: [], r32picks: [], s16picks: [], e8picks: [], f4picks: [], paid: [] }))
+      .createTextOutput(JSON.stringify({ error: err.toString(), participants: [], picks: [], r32picks: [], s16picks: [], e8picks: [], f4picks: [], chmpPicks: [], chmpTotals: [], paid: [] }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
