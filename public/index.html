@@ -1137,17 +1137,65 @@ function render() {
       ${scoreMeta}
     </div>`;
 
+  // When locked, show pre-game view without revealing who picked which team
+  let columnsHtml = '';
+  if (CHMP_PICKS_REVEALED) {
+    columnsHtml = `<div class="chmp-columns">
+      ${teamColumn(team2, g.seed2)}
+      ${teamColumn(team1, g.seed1)}
+    </div>`;
+  } else {
+    // Locked: show matchup without revealing picks
+    const logo2Html = LOGOS[team2] ? `<img class="bracket-team-logo" src="${LOGOS[team2]}" alt="${team2}">` : '';
+    const logo1Html = LOGOS[team1] ? `<img class="bracket-team-logo" src="${LOGOS[team1]}" alt="${team1}">` : '';
+    columnsHtml = `<div class="bracket-wrap">
+      <div class="bracket">
+        <div class="bracket-side left">
+          <div class="bracket-team">
+            <div class="bracket-team-header">
+              ${logo2Html}
+              <div class="bracket-team-info">
+                <div class="bracket-team-seed">${g.seed2} Seed</div>
+                <div class="bracket-team-name">${team2}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bracket-center">
+          <div class="bracket-hub">
+            <div class="bracket-hub-icon">🏆</div>
+            <div class="bracket-hub-label">TITLE GAME</div>
+          </div>
+        </div>
+        <div class="bracket-side right">
+          <div class="bracket-team">
+            <div class="bracket-team-header">
+              ${logo1Html}
+              <div class="bracket-team-info">
+                <div class="bracket-team-seed">${g.seed1} Seed</div>
+                <div class="bracket-team-name">${team1}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:20px 0 0;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3b82f6;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Picks &amp; totals locked &mdash; revealed at tip-off
+        </div>
+      </div>
+    </div>`;
+  }
+
   const html = `
   <div class="f4-header">
     <div class="f4-title">National Championship</div>
     <div class="f4-subtitle">Indianapolis &middot; Monday, April 6</div>
     <div class="f4-divider"></div>
   </div>
-  ${scoreBar}
-  <div class="chmp-columns">
-    ${teamColumn(team2, g.seed2)}
-    ${teamColumn(team1, g.seed1)}
-  </div>`;
+  ${CHMP_PICKS_REVEALED ? scoreBar : ''}
+  ${columnsHtml}`;
 
   document.getElementById('app').innerHTML = html;
 
