@@ -1971,12 +1971,17 @@ async function fetchScores(manual = false) {
         };
       });
 
-      // Only process teams in our Championship schedule
-      const chmpTeams = new Set();
-      schedule.forEach(g => { chmpTeams.add(g.team1); chmpTeams.add(g.team2); });
+      // Only process if BOTH teams in this event match our Championship game
+      const chmpMatchups = schedule.map(g => [g.team1, g.team2]);
+      const mt1 = mapped[0]?.name;
+      const mt2 = mapped[1]?.name;
+      const isChmpGame = chmpMatchups.some(([a, b]) =>
+        (mt1 === a && mt2 === b) || (mt1 === b && mt2 === a)
+      );
+      if (!isChmpGame) return; // Skip — not our championship matchup
 
       mapped.forEach((m, i) => {
-        if (!m.name || !chmpTeams.has(m.name)) return;
+        if (!m.name) return;
         const oppScore = mapped[1 - i]?.score || 0;
         const prev = JSON.stringify(gameScores[m.name]);
         gameScores[m.name] = { score1: m.score, score2: oppScore, state, clock, period };
@@ -2042,11 +2047,13 @@ function copyHandle() {
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
-// One-time cache bust: clear stale F4 localStorage for Championship transition
-if (!localStorage.getItem('sp_chmp_v1')) {
+// One-time cache bust: clear stale data for Championship transition
+if (!localStorage.getItem('sp_chmp_v2')) {
   localStorage.removeItem('sp_f4_results');
   localStorage.removeItem('sp_f4_gameScores');
-  localStorage.setItem('sp_chmp_v1', '1');
+  localStorage.removeItem('sp_chmp_results');
+  localStorage.removeItem('sp_chmp_gameScores');
+  localStorage.setItem('sp_chmp_v2', '1');
 }
 loadSavedResults();
 render();
